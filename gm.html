@@ -1,0 +1,1533 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Эвия — мастер</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Forum&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: архивный кодекс — узкая колонка оглавления слева, лист статьи справа; кванты фактов как строки реестра с меткой видимости на полях. */
+:root{
+  --paper:#E9ECE7; --sheet:#F8F9F6; --ink:#1C2430; --muted:#5D6672; --line:#CBD1CA;
+  --verd:#1D7466; --verd-soft:#DCEDE8; --secret:#8C2D4E; --secret-soft:#F4E7EC; --brass:#8A6B2E;
+  --shadow:0 1px 0 rgba(28,36,48,.06),0 8px 24px -16px rgba(28,36,48,.35);
+  --f-display:"Forum","Literata",Georgia,serif;
+  --f-body:"Literata",Georgia,"Times New Roman",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --side:290px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#11151B; --sheet:#171D25; --ink:#E2E5E0; --muted:#9AA2AA; --line:#2B333D;
+  --verd:#56BCA8; --verd-soft:#173430; --secret:#E486A4; --secret-soft:#2C1922; --brass:#CDAA62;
+  --shadow:0 1px 0 rgba(0,0,0,.3),0 10px 30px -18px rgba(0,0,0,.8); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#11151B; --sheet:#171D25; --ink:#E2E5E0; --muted:#9AA2AA; --line:#2B333D;
+  --verd:#56BCA8; --verd-soft:#173430; --secret:#E486A4; --secret-soft:#2C1922; --brass:#CDAA62;
+  --shadow:0 1px 0 rgba(0,0,0,.3),0 10px 30px -18px rgba(0,0,0,.8); color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);font:16px/1.6 var(--f-body);-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--sheet)}
+a{color:var(--verd);text-decoration:none}
+a:hover{text-decoration:underline}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--verd);outline-offset:2px;border-radius:4px}
+input,textarea,select{font:inherit;color:var(--ink);background:var(--sheet);border:1px solid var(--line);border-radius:6px;padding:6px 10px}
+textarea{width:100%;min-height:90px;resize:vertical;line-height:1.5}
+.mono{font-family:var(--f-mono);font-size:.82em;letter-spacing:.01em}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--sheet);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:12px;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.brand{font:400 26px/1 var(--f-display);letter-spacing:.04em;white-space:nowrap;color:var(--ink)}
+.brand small{display:block;font:500 10px/1.2 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:3px}
+.search{flex:1;min-width:0;max-width:440px;margin-left:auto}
+.search input{width:100%;border-radius:999px;padding:7px 14px}
+.modes{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;flex:none}
+.modes button{padding:6px 12px;font-size:13px;color:var(--muted)}
+.modes button[aria-pressed="true"]{background:var(--ink);color:var(--sheet)}
+.menu-btn,.burger{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);flex:none}
+.burger{display:none}
+.menu{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:58px;background:var(--sheet);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:6px;min-width:260px;z-index:40}
+.menu button{display:block;width:100%;text-align:left;padding:8px 10px;border-radius:6px;font-size:14px}
+.menu button:hover{background:var(--paper)}
+.menu .note{font-size:12px;color:var(--muted);padding:6px 10px}
+
+/* shell */
+.shell{display:grid;grid-template-columns:var(--side) minmax(0,1fr);min-height:calc(100% - 60px)}
+nav.side{border-right:1px solid var(--line);padding:18px 14px 40px max(16px,env(safe-area-inset-left,0px));position:sticky;top:calc(env(safe-area-inset-top,0px) + 58px);height:calc(100vh - 58px);overflow:auto;font-size:14px}
+.side h4{font:500 11px/1.2 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:18px 0 6px}
+.side h5{font:italic 400 13px/1.3 var(--f-body);color:var(--muted);margin:10px 0 2px 2px}
+.side ul{list-style:none;margin:0;padding:0}
+.side li a{display:flex;align-items:center;gap:8px;padding:3px 6px;border-radius:5px;color:var(--ink)}
+.side li a:hover{background:var(--sheet);text-decoration:none}
+.side li a[aria-current="page"]{background:var(--ink);color:var(--sheet)}
+.dot{width:7px;height:7px;border-radius:50%;flex:none;border:1.5px solid var(--secret)}
+.dot.on{background:var(--verd);border-color:var(--verd)}
+.side .navtop a{font-weight:600}
+.side .newbtn{margin-top:18px;font-size:13px;color:var(--verd)}
+main{padding-block:28px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));min-width:0}
+.page{max-width:780px;margin:0 auto}
+
+/* article */
+.crumb{font:500 11px/1.2 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+h1.title{font:400 clamp(34px,5vw,50px)/1.05 var(--f-display);margin:8px 0 12px;text-wrap:balance;letter-spacing:.01em}
+.names{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:2px 10px 2px 4px;font-size:13px;background:var(--sheet)}
+.chip.closed{border-style:dashed;border-color:var(--secret);background:var(--secret-soft)}
+.chip.plain{padding:2px 10px}
+.lead{font-size:19px;line-height:1.5;color:var(--ink);margin:4px 0 22px}
+section.sec{margin:30px 0 0}
+section.sec>h2{font:400 26px/1.15 var(--f-display);margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:10px}
+section.sec>h2 .h{flex:1}
+.q{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:6px;align-items:start;padding:5px 6px 5px 0;border-radius:6px;position:relative}
+.q+.q{margin-top:2px}
+.q .qt{padding-top:1px}
+.q .qt p{margin:0}
+.q.closed{background:var(--secret-soft)}
+.q.closed .qt{color:color-mix(in srgb,var(--ink) 88%,var(--secret))}
+.q.player{grid-template-columns:14px minmax(0,1fr);padding-left:0}
+.q.player::before{content:"";width:5px;height:5px;margin-top:11px;margin-left:3px;background:var(--brass);transform:rotate(45deg)}
+.q.new .qt::after{content:"новое";font:500 10px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--verd);border:1px solid var(--verd);border-radius:3px;padding:2px 4px;margin-left:8px;vertical-align:2px}
+.eye{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:var(--secret)}
+.eye.on{color:var(--verd)}
+.eye:hover{background:var(--sheet)}
+.eye.sm{width:22px;height:22px}
+.qtools{display:flex;gap:2px;opacity:0;transition:opacity .12s}
+.q:hover .qtools,.q:focus-within .qtools{opacity:1}
+@media (hover:none){.qtools{opacity:.7}}
+.tool{width:26px;height:26px;border-radius:5px;display:grid;place-items:center;color:var(--muted)}
+.tool:hover{background:var(--sheet);color:var(--ink)}
+.lk{border-bottom:1px solid color-mix(in srgb,var(--verd) 40%,transparent)}
+.lk:hover{text-decoration:none;border-bottom-color:var(--verd)}
+.lk.hid{color:var(--secret);border-bottom-style:dashed;border-bottom-color:var(--secret)}
+.lk.missing{color:var(--muted);border-bottom:1px dotted var(--muted)}
+.addrow{display:flex;gap:14px;flex-wrap:wrap;margin:8px 0 0 34px}
+.addrow button,.textbtn{font-size:13px;color:var(--verd)}
+.secbtns{display:flex;gap:2px;font-size:12px}
+.secbtns .tool{width:auto;padding:0 6px;font-family:var(--f-mono);font-size:11px;letter-spacing:.04em}
+
+.editor{display:grid;gap:8px}
+.editor .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--line);border-radius:6px;padding:5px 12px;font-size:14px;background:var(--sheet)}
+.btn.pri{background:var(--ink);color:var(--sheet);border-color:var(--ink)}
+.hint{font-size:12px;color:var(--muted)}
+.picker{border:1px solid var(--line);border-radius:8px;background:var(--sheet);max-height:220px;overflow:auto}
+.picker button{display:block;width:100%;text-align:left;padding:5px 10px;font-size:14px}
+.picker button:hover{background:var(--paper)}
+
+/* tables */
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--sheet);margin:4px 0}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font:500 11px/1.3 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--paper);position:sticky;top:0}
+tr:last-child td{border-bottom:0}
+td.grp{font:500 11px/1.3 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--brass);background:var(--paper)}
+.tfilter{margin:4px 0 8px;width:100%;max-width:320px}
+
+/* gallery */
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:6px 0 10px}
+figure.img{margin:0;border:1px solid var(--line);border-radius:8px;background:var(--sheet);overflow:hidden;display:flex;flex-direction:column}
+figure.img.closed{border:1px dashed var(--secret)}
+figure.img .ph{aspect-ratio:4/3;background:var(--paper);display:grid;place-items:center;overflow:hidden;cursor:zoom-in}
+figure.img img{width:100%;height:100%;object-fit:cover;display:block}
+figure.img figcaption{font-size:12px;color:var(--muted);padding:6px 8px;display:flex;gap:4px;align-items:flex-start}
+figure.img figcaption span{flex:1;min-width:0}
+[hidden]{display:none!important}
+.lightbox{position:fixed;inset:0;z-index:60;background:rgba(10,12,16,.82);display:grid;place-items:center;padding:24px}
+.lightbox img{max-width:100%;max-height:100%;border-radius:6px;background:#fff}
+
+/* backlinks */
+.back{margin-top:40px;padding-top:14px;border-top:1px solid var(--line);font-size:14px}
+.back h3{font:500 11px/1.2 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.back ul{display:flex;flex-wrap:wrap;gap:6px 14px;list-style:none;margin:0;padding:0}
+.gmfoot{margin-top:28px;display:flex;gap:16px;flex-wrap:wrap;font-size:13px}
+.danger{color:var(--secret)}
+
+/* home */
+.hero h1{font:400 clamp(40px,7vw,68px)/1 var(--f-display);margin:6px 0 10px;letter-spacing:.02em}
+.hero p{max-width:60ch;color:var(--muted);margin:0}
+.stats{display:flex;flex-wrap:wrap;gap:28px;margin:24px 0 8px}
+.stat b{display:block;font:400 34px/1 var(--f-display)}
+.stat span{font:500 11px/1.4 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.bar{height:6px;border-radius:3px;background:var(--secret-soft);overflow:hidden;max-width:420px;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--verd)}
+.cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:28px}
+.cat{background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.cat h3{font:400 22px/1.1 var(--f-display);margin:0 0 6px}
+.cat p{margin:0;font-size:13px;color:var(--muted)}
+.cat ul{list-style:none;padding:0;margin:8px 0 0;font-size:14px;line-height:1.5}
+.recent{margin-top:34px}
+.recent h2{font:400 26px/1.1 var(--f-display);margin:0 0 10px}
+.recent li{margin-bottom:8px}
+.recent ul{padding-left:18px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:14px}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+
+/* timeline */
+.tl-filters{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 22px}
+.fchip{border:1px solid var(--line);border-radius:999px;padding:3px 11px;font-size:13px;background:var(--sheet)}
+.fchip[aria-pressed="true"]{background:var(--ink);color:var(--sheet);border-color:var(--ink)}
+.era{font:400 24px/1.1 var(--f-display);margin:30px 0 8px;color:var(--brass)}
+.ev{display:grid;grid-template-columns:132px minmax(0,1fr);gap:16px;padding:10px 0;border-top:1px solid var(--line)}
+.ev .when{font-family:var(--f-mono);font-size:13px;line-height:1.35}
+.ev .when b{display:block;font-weight:500;font-size:15px}
+.ev .when i{font-style:normal;color:var(--muted)}
+.ev .when em{display:block;font-style:normal;color:var(--brass);font-size:12px}
+.ev .body{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:6px;align-items:start;border-radius:6px}
+.ev.player .body{grid-template-columns:minmax(0,1fr)}
+.ev.closed .body{background:var(--secret-soft)}
+.ev:hover .qtools{opacity:1}
+.evform{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.evform label{display:grid;gap:2px;font-size:12px;color:var(--muted)}
+
+.empty{padding:40px 0;color:var(--muted)}
+.wip{margin-top:24px;padding:28px;border:1px dashed var(--line,#999);border-radius:10px;color:var(--muted)}
+.wip b{display:inline-block;font-family:var(--f-mono);letter-spacing:.12em;font-size:12px;padding:3px 8px;border:1px solid currentColor;border-radius:4px;margin-bottom:10px}
+.wip p{margin:0}
+.gl .page{max-width:none}
+.gl-tools{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+.gl-tools input#glq{flex:1;min-width:200px;max-width:360px}
+.gl-t td{padding:2px 4px}
+.gl-t th:nth-child(1),.gl-t th:nth-child(2){width:32%}
+.gl-t input{width:100%;border:1px solid transparent;background:transparent;padding:5px 6px;border-radius:4px;font-size:14px}
+.gl-t input:hover{border-color:var(--line)}
+.gl-t input:focus{border-color:var(--verd);background:var(--sheet)}
+.gl-t td:nth-child(1) input{font-weight:600}
+.gl-t tr.gl-miss td:nth-child(2) input{background:var(--secret-soft)}
+.gl-t tr.gl-closed td:nth-child(1) input{color:var(--muted)}
+.gl-act{white-space:nowrap;width:1%}
+.gl-act .eye,.gl-act .tool{display:inline-grid}
+.loading{display:grid;place-items:center;min-height:50vh;color:var(--muted);font-style:italic}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--sheet);padding:10px 16px;border-radius:8px;font-size:14px;z-index:70;display:flex;gap:14px;align-items:center;box-shadow:var(--shadow);max-width:calc(100% - 32px)}
+.toast button{color:var(--verd-soft);text-decoration:underline}
+.syncpill{font:500 11px/1 var(--f-mono);letter-spacing:.06em;color:var(--muted);white-space:nowrap}
+.newform{background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:10px;max-width:480px}
+.newform label{display:grid;gap:4px;font-size:13px;color:var(--muted)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.results li{margin-bottom:12px}
+.results .snip{font-size:14px;color:var(--muted)}
+mark{background:var(--verd-soft);color:inherit;border-radius:2px;padding:0 1px}
+
+.qadd-btn{flex:none;border-radius:999px;font-size:13px;padding:6px 12px}
+.qa-modal{position:fixed;inset:0;z-index:65;background:rgba(10,12,16,.45);display:grid;place-items:start center;padding:8vh 16px 16px;overflow:auto}
+.qa-box{background:var(--sheet);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);width:min(560px,100%);padding:16px 18px;display:grid;gap:12px}
+.qa-head{display:flex;align-items:center;justify-content:space-between}
+.qa-head h2{font:400 26px/1 var(--f-display);margin:0}
+.qa-tabs{display:flex;gap:6px}
+.qa-l{display:grid;gap:4px;font-size:13px;color:var(--muted)}
+.qa-l input,.qa-l select{color:var(--ink);font-size:15px}
+.qa-row{display:flex;gap:8px;align-items:end;flex-wrap:wrap}
+.qa-row input{flex:1;min-width:0}
+.qa-opts .qa-l{flex:1;min-width:120px}
+.qa-chk{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted);padding-bottom:8px}
+.qa-vars{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.qa-var{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--paper)}
+.qa-var button{padding:4px 10px;font-size:14px}
+.qa-var button:hover{background:var(--verd-soft)}
+.qa-var .qa-star{padding:4px 8px;border-left:1px solid var(--line);color:var(--brass)}
+.qa-links{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.qa-links input{flex:1;min-width:180px}
+.qa-foot{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+@media (max-width:900px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  nav.side{position:fixed;left:0;top:calc(env(safe-area-inset-top,0px) + 58px);bottom:0;height:auto;width:min(86vw,320px);background:var(--paper);z-index:25;transform:translateX(-105%);transition:transform .2s;box-shadow:var(--shadow)}
+  nav.side.open{transform:none}
+  .burger{display:grid}
+  .brand small{display:none}
+  .modes button{padding:6px 9px}
+  .ev{grid-template-columns:minmax(0,1fr);gap:4px}
+}
+@media (max-width:560px){
+  .top{flex-wrap:wrap}
+  .search{order:5;flex-basis:100%;max-width:none}
+  .menu{top:100px}
+  nav.side{top:calc(env(safe-area-inset-top,0px) + 104px)}
+  .syncpill{display:none}
+  .q,.ev .body{grid-template-columns:24px minmax(0,1fr)}
+  .q.player{grid-template-columns:14px minmax(0,1fr)}
+  .qtools{grid-column:2;justify-content:flex-end;margin-top:-4px}
+  section.sec>h2{flex-wrap:wrap}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<script>window.EVIA_MODE="gm";</script>
+<script>
+/* Эвия — хранилище на GitHub. Подменяет window.claude: данные живут в браузере (IndexedDB)
+   и синхронизируются с репозиториями по кнопке. Режим задаёт window.EVIA_MODE: "gm" или "player". */
+(function(){
+"use strict";
+const CFG={owner:"dariasavchenko-esl",gmRepo:"aevia-gm",pubRepo:"aevia",branch:"main",
+  gmPath:"data/gm.json",pubPath:"data/players.json",pages:"https://dariasavchenko-esl.github.io/aevia/"};
+const MODE=window.EVIA_MODE||"player";
+const API="https://api.github.com";
+
+/* ---------- IndexedDB ---------- */
+let idb=null;
+function openIdb(){
+  return new Promise(res=>{
+    try{const r=indexedDB.open("evia-"+MODE,1);
+      r.onupgradeneeded=()=>{r.result.createObjectStore("kv");r.result.createObjectStore("img")};
+      r.onsuccess=()=>{idb=r.result;res(idb)};r.onerror=()=>res(null);
+    }catch(e){res(null)}
+  });
+}
+function idbGet(store,key){return new Promise(res=>{if(!idb) return res(undefined);try{const t=idb.transaction(store).objectStore(store).get(key);t.onsuccess=()=>res(t.result);t.onerror=()=>res(undefined)}catch(e){res(undefined)}})}
+function idbPut(store,key,val){return new Promise(res=>{if(!idb) return res();try{const tx=idb.transaction(store,"readwrite");tx.objectStore(store).put(val,key);tx.oncomplete=()=>res();tx.onerror=()=>res()}catch(e){res()}})}
+const ready=openIdb();
+
+/* ---------- состояние ---------- */
+const st={gm:{},pub:{},tomb:{},base:{},dirty:false,lastSync:0,imgPending:{},imgPushed:{}};
+const subs={gm:[],pub:[]};
+const clone=o=>JSON.parse(JSON.stringify(o));
+function snap(c){return {docs:Object.entries(st[c]).map(([id,v])=>({id,data:()=>clone(v)}))}}
+function notify(c){for(const f of subs[c]) try{f(snap(c))}catch(e){console.error(e)}}
+let saveT=null;
+function persist(){clearTimeout(saveT);saveT=setTimeout(()=>idbPut("kv","state",{gm:st.gm,tomb:st.tomb,base:st.base,dirty:st.dirty,lastSync:st.lastSync,imgPending:st.imgPending,imgPushed:st.imgPushed,pub:MODE==="player"?st.pub:{}}),200)}
+async function load(){
+  await ready;const s=await idbGet("kv","state");
+  if(s){Object.assign(st,{gm:s.gm||{},tomb:s.tomb||{},base:s.base||{},dirty:!!s.dirty,lastSync:s.lastSync||0,imgPending:s.imgPending||{},imgPushed:s.imgPushed||{},pub:s.pub||{}})}
+}
+const loaded=load();
+/* мастер с пустым архивом ждёт первой синхронизации, чтобы не затереть данные заготовками */
+let gateOpen=true,openGate=null;const gate=loaded.then(()=>{if(MODE==="gm"&&!Object.keys(st.gm).length){gateOpen=false;return new Promise(r=>{openGate=()=>{gateOpen=true;r()}})}});
+
+/* ---------- токен и GitHub ---------- */
+const tokenKey="evia-gh-token";
+function token(){try{return localStorage.getItem(tokenKey)||""}catch(e){return ""}}
+function setToken(t){try{t?localStorage.setItem(tokenKey,t):localStorage.removeItem(tokenKey)}catch(e){}}
+async function gh(path,opt={},raw=false){
+  const h={"Accept":raw?"application/vnd.github.raw+json":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"};
+  const t=token();if(t) h.Authorization="Bearer "+t;
+  if(opt.body) h["Content-Type"]="application/json";
+  const r=await fetch(API+path,{...opt,headers:{...h,...(opt.headers||{})},cache:"no-store"});
+  return r;
+}
+function b64(str){const bytes=new TextEncoder().encode(str);let s="";for(let i=0;i<bytes.length;i+=0x8000) s+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000));return btoa(s)}
+async function blobB64(blob){const buf=new Uint8Array(await blob.arrayBuffer());let s="";for(let i=0;i<buf.length;i+=0x8000) s+=String.fromCharCode.apply(null,buf.subarray(i,i+0x8000));return btoa(s)}
+async function getSha(repo,path){
+  const r=await gh(`/repos/${CFG.owner}/${repo}/contents/${path}?ref=${CFG.branch}`);
+  if(r.status===404) return null;
+  if(!r.ok) throw httpErr(r);
+  const j=await r.json();return j.sha;
+}
+async function readRaw(repo,path){
+  const r=await gh(`/repos/${CFG.owner}/${repo}/contents/${path}?ref=${CFG.branch}&t=${Date.now()}`,{},true);
+  if(r.status===404) return null;
+  if(!r.ok) throw httpErr(r);
+  return r;
+}
+async function putFile(repo,path,contentB64,message,sha){
+  const body={message,content:contentB64,branch:CFG.branch};if(sha) body.sha=sha;
+  const r=await gh(`/repos/${CFG.owner}/${repo}/contents/${path}`,{method:"PUT",body:JSON.stringify(body)});
+  if(!r.ok) throw httpErr(r);
+  return (await r.json()).content.sha;
+}
+function httpErr(r){const e=new Error("HTTP "+r.status);e.status=r.status;return e}
+function errText(e){
+  if(!e) return "неизвестная ошибка";
+  if(e.status===401) return "токен не подошёл — проверьте его в настройках синхронизации";
+  if(e.status===403) return "GitHub отказал в доступе (токен без прав на запись или лимит запросов)";
+  if(e.status===404) return "репозиторий не найден или токен его не видит";
+  if(e.status===409) return "файл изменился во время синхронизации — нажмите ещё раз";
+  if(e.status===422) return "GitHub отклонил запись";
+  if(e instanceof TypeError) return "нет связи с GitHub — проверьте интернет";
+  return e.message||String(e);
+}
+
+/* ---------- картинки ---------- */
+const urls={};const loading={};
+function imgSrc(asset){
+  if(!asset) return "";
+  if(urls[asset]) return urls[asset];
+  if(!loading[asset]) loading[asset]=loadImg(asset);
+  return "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
+}
+async function loadImg(asset){
+  await ready;
+  let blob=await idbGet("img",asset);
+  if(!blob){
+    try{
+      if(MODE==="gm"&&token()){const r=await readRaw(CFG.gmRepo,"img/"+asset);if(r) blob=await r.blob()}
+      if(!blob){const r=await fetch(CFG.pages+"img/"+asset).catch(()=>null);if(r&&r.ok) blob=await r.blob()}
+      if(!blob){const r=await readRaw(CFG.pubRepo,"img/"+asset).catch(()=>null);if(r) blob=await r.blob()}
+      if(blob) await idbPut("img",asset,blob);
+    }catch(e){}
+  }
+  if(blob){urls[asset]=URL.createObjectURL(blob);rerender()}
+}
+let rrT=null;function rerender(){clearTimeout(rrT);rrT=setTimeout(()=>{if(window.__evia&&window.__evia.renderMain) window.__evia.renderMain()},50)}
+
+/* ---------- API, как у claude ---------- */
+function collection(c){
+  return {
+    onSnapshot(cb){subs[c].push(cb);gate.then(()=>cb(snap(c)));return ()=>{subs[c]=subs[c].filter(f=>f!==cb)}},
+    async get(){await loaded;return snap(c)},
+    doc(id){return {
+      async set(v){
+        await loaded;
+        if(MODE!=="gm"||!gateOpen) return;
+        if(c==="pub"){st.pub[id]=clone(v);return}
+        const d=clone(v);if(id==="_timeline") d.updated=Date.now();
+        st.gm[id]=d;delete st.tomb[id];st.dirty=true;persist();notify("gm");status();
+      },
+      async delete(){
+        await loaded;
+        if(MODE!=="gm"||!gateOpen) return;
+        if(c==="pub"){delete st.pub[id];return}
+        delete st.gm[id];st.tomb[id]=Date.now();st.dirty=true;persist();notify("gm");status();
+      }
+    }}
+  };
+}
+const db={collection};
+const assets={async upload(file){
+  await ready;const id=Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,"0")).join("");
+  await idbPut("img",id,file);urls[id]=URL.createObjectURL(file);st.imgPending[id]=1;st.dirty=true;persist();status();
+  return {id};
+}};
+const downloads={async save({filename,data}){
+  const blob=data instanceof Blob?data:new Blob([data],{type:/\.html?$/.test(filename)?"text/html":"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
+}};
+window.claude={use:async name=>{
+  if(name==="user") return {canEdit:async()=>MODE==="gm"};
+  if(name==="db") return db;
+  if(name==="assets") return MODE==="gm"?assets:null;
+  if(name==="downloads") return downloads;
+  return null;
+}};
+window.__imgSrc=imgSrc;
+
+/* ---------- синхронизация мастера ---------- */
+function mergeDocs(local,remote,tl,tr,base){
+  const out={},tomb={...tr};
+  for(const [k,v] of Object.entries(tl)) tomb[k]=Math.max(tomb[k]||0,v);
+  const ids=new Set([...Object.keys(local),...Object.keys(remote)]);
+  let conflicts=0;
+  for(const id of ids){
+    const L=local[id],R=remote[id];
+    let pick=!L?R:!R?L:((L.updated||0)>=(R.updated||0)?L:R);
+    if(L&&R&&base[id]!=null&&(L.updated||0)!==base[id]&&(R.updated||0)!==base[id]&&JSON.stringify(L)!==JSON.stringify(R)) conflicts++;
+    if(pick&&tomb[id]&&tomb[id]>(pick.updated||0)) pick=null;
+    if(pick) out[id]=pick;
+  }
+  return {docs:out,tomb,conflicts};
+}
+function buildPub(docs){
+  const E=window.__evia;const m=new Map();
+  for(const [id,v] of Object.entries(docs)) if(id!=="_timeline") m.set(id,v);
+  const vis=E.visSet(m);const arts=[];
+  for(const a of m.values()){const p=E.pubOf(a,vis,m);if(p) arts.push(p)}
+  const tl=E.pubTimeline(docs._timeline||{events:[]},vis,m);
+  return {savedAt:new Date().toISOString(),articles:arts,timeline:tl};
+}
+let syncing=false;
+async function syncGm(){
+  if(syncing) return;
+  if(!token()){openSettings();return}
+  if(!navigator.onLine){status("нет интернета");return}
+  syncing=true;status("синхронизирую…");
+  try{
+    await loaded;
+    for(let attempt=0;attempt<2;attempt++){
+      // 1. скачать архив
+      let remote={docs:{},tomb:{}},sha=null;
+      const r=await readRaw(CFG.gmRepo,CFG.gmPath);
+      if(r){remote=await r.json();sha=await getSha(CFG.gmRepo,CFG.gmPath)}
+      if(!r&&!Object.keys(st.gm).length){status();toast("В закрытом репозитории нет архива (data/gm.json) — загрузите его туда, потом синхронизируйте.");return}
+      // 2. слить
+      const m=mergeDocs(st.gm,remote.docs||{},st.tomb,remote.tomb||{},st.base);
+      if(!Object.keys(m.docs).length) throw new Error("архив получился пустым — синхронизация остановлена, ничего не записано");
+      // 3. картинки мастера
+      for(const id of Object.keys(st.imgPending)){
+        const blob=await idbGet("img",id);if(!blob){delete st.imgPending[id];continue}
+        const s=await getSha(CFG.gmRepo,"img/"+id);
+        if(!s) await putFile(CFG.gmRepo,"img/"+id,await blobB64(blob),"Картинка "+id);
+        delete st.imgPending[id];persist();
+      }
+      // 4. записать архив
+      const payload={savedAt:new Date().toISOString(),docs:m.docs,tomb:m.tomb};
+      try{
+        await putFile(CFG.gmRepo,CFG.gmPath,b64(JSON.stringify(payload)),"Архив мастера · "+new Date().toLocaleString("ru-RU"),sha);
+      }catch(e){if(e.status===409&&attempt===0) continue;throw e}
+      st.gm=m.docs;st.tomb=m.tomb;st.base=Object.fromEntries(Object.entries(m.docs).map(([k,v])=>[k,v.updated||0]));
+      // 5. версия для игроков и открытые картинки
+      const pub=buildPub(m.docs);
+      const openImgs=new Set(pub.articles.flatMap(a=>(a.images||[]).map(i=>i.asset)));
+      for(const id of openImgs){
+        if(st.imgPushed[id]) continue;
+        let blob=await idbGet("img",id);
+        if(!blob){const rr=await readRaw(CFG.gmRepo,"img/"+id);if(rr){blob=await rr.blob();await idbPut("img",id,blob)}}
+        if(!blob) continue;
+        const s=await getSha(CFG.pubRepo,"img/"+id);
+        if(!s) await putFile(CFG.pubRepo,"img/"+id,await blobB64(blob),"Открыта картинка "+id);
+        st.imgPushed[id]=1;persist();
+      }
+      const psha=await getSha(CFG.pubRepo,CFG.pubPath);
+      await putFile(CFG.pubRepo,CFG.pubPath,b64(JSON.stringify(pub)),"Версия для игроков · "+new Date().toLocaleString("ru-RU"),psha);
+      st.dirty=false;st.lastSync=Date.now();persist();if(openGate){openGate();openGate=null}else notify("gm");
+      status();toast("Синхронизировано. Статей в архиве: "+Object.keys(m.docs).filter(k=>k!=="_timeline").length+", открыто игрокам: "+pub.articles.length+"."+(m.conflicts?" Правки с двух устройств в "+m.conflicts+" статьях — взята более свежая версия.":""));
+      break;
+    }
+  }catch(e){console.error(e);status("ошибка");toast("Синхронизация не удалась: "+errText(e)+".")}
+  finally{syncing=false;status()}
+}
+
+/* ---------- синхронизация игрока ---------- */
+async function syncPlayer(quiet){
+  if(syncing) return;syncing=true;status("обновляю…");
+  try{
+    await loaded;
+    let data=null;
+    try{const r=await gh(`/repos/${CFG.owner}/${CFG.pubRepo}/contents/${CFG.pubPath}?ref=${CFG.branch}&t=${Date.now()}`,{},true);if(r.ok) data=await r.json()}catch(e){}
+    if(!data){const r=await fetch(CFG.pages+CFG.pubPath+"?t="+Date.now(),{cache:"no-store"});if(r.ok) data=await r.json()}
+    if(!data) throw new Error("no data");
+    st.pub={};for(const a of data.articles||[]) st.pub[a.id]=a;st.pub._timeline=data.timeline||{events:[]};
+    st.lastSync=Date.now();persist();notify("pub");status();
+    if(!quiet) toast("Обновлено: "+(data.articles||[]).length+" статей.");
+  }catch(e){console.error(e);status(Object.keys(st.pub).length?"офлайн-копия":"нет связи");if(!quiet) toast("Не удалось обновить — показываю сохранённую копию.")}
+  finally{syncing=false;status()}
+}
+
+/* ---------- интерфейс ---------- */
+function toast(t){if(window.__evia&&window.__evia.toast) window.__evia.toast(t);else alert(t)}
+function ago(ts){if(!ts) return "ещё не синхронизировано";const m=Math.round((Date.now()-ts)/60000);return m<1?"только что":m<60?m+" мин назад":new Date(ts).toLocaleString("ru-RU",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}
+let statusText="";
+function status(t){
+  if(t!==undefined) statusText=t;
+  const el=document.getElementById("gh-status");if(!el) return;
+  const busy=syncing;
+  el.textContent=statusText&&busy?statusText:(MODE==="gm"&&st.dirty?"есть несохранённые правки":ago(st.lastSync));
+  el.classList.toggle("warn",MODE==="gm"&&st.dirty&&!busy);
+  const b=document.getElementById("gh-sync");if(b) b.disabled=busy;
+}
+function openSettings(){
+  const m=document.getElementById("gh-modal");
+  m.innerHTML='<div class="qa-box" role="dialog" aria-modal="true"><div class="qa-head"><h2>Синхронизация с GitHub</h2><button class="tool" data-gh="close" aria-label="Закрыть">✕</button></div>'+
+   '<p class="hint" style="margin:0">Архив мастера хранится в закрытом репозитории <b>'+CFG.owner+'/'+CFG.gmRepo+'</b>, версия для игроков — в открытом <b>'+CFG.owner+'/'+CFG.pubRepo+'</b>. Нужен личный токен GitHub (fine-grained) с правом <b>Contents: Read and write</b> на оба репозитория. Токен хранится только в этом браузере.</p>'+
+   '<label class="qa-l">Токен<input id="gh-token" type="password" autocomplete="off" value="'+(token()?"••••••••":"")+'" placeholder="github_pat_…"></label>'+
+   '<div class="qa-foot"><button class="btn pri" data-gh="save">Сохранить и синхронизировать</button>'+(token()?'<button class="btn" data-gh="forget">Забыть токен</button>':"")+'<button class="btn" data-gh="close">Отмена</button></div></div>';
+  m.hidden=false;setTimeout(()=>document.getElementById("gh-token").focus(),30);
+}
+document.addEventListener("click",e=>{
+  if(e.target.id==="gh-modal"){e.target.hidden=true;return}
+  const b=e.target.closest("[data-gh]");if(!b) return;
+  const m=document.getElementById("gh-modal");
+  if(b.dataset.gh==="close") m.hidden=true;
+  if(b.dataset.gh==="forget"){setToken("");m.hidden=true;toast("Токен удалён из этого браузера.")}
+  if(b.dataset.gh==="save"){const v=document.getElementById("gh-token").value.trim();if(v&&!/^•+$/.test(v)) setToken(v);m.hidden=true;syncGm()}
+  if(b.dataset.gh==="sync") MODE==="gm"?syncGm():syncPlayer(false);
+  if(b.dataset.gh==="settings"){document.getElementById("menu").hidden=true;openSettings()}
+});
+function mountUi(){
+  const top=document.querySelector(".top");const menuBtn=document.getElementById("menubtn");
+  const wrap=document.createElement("div");wrap.className="gh-wrap";
+  wrap.innerHTML='<button class="btn gh-btn" id="gh-sync" data-gh="sync" title="'+(MODE==="gm"?"Отправить правки и получить чужие":"Получить свежую версию")+'">⟳ <span class="gh-l">Синхронизировать</span></button><span class="gh-status" id="gh-status"></span>';
+  top.insertBefore(wrap,menuBtn);
+  const modal=document.createElement("div");modal.id="gh-modal";modal.className="qa-modal";modal.hidden=true;document.body.appendChild(modal);
+  const css=document.createElement("style");css.textContent='.gh-wrap{display:flex;align-items:center;gap:8px;flex:none}.gh-btn{border-radius:999px;font-size:13px;padding:6px 12px}.gh-btn:disabled{opacity:.6}.gh-status{font:500 11px/1.2 var(--f-mono);color:var(--muted);max-width:120px}.gh-status.warn{color:var(--secret)}@media (max-width:700px){.gh-l,.gh-status{display:none}}';
+  document.head.appendChild(css);
+  status();
+}
+window.__gh={mode:MODE,sync:()=>MODE==="gm"?syncGm():syncPlayer(false),settings:openSettings,cfg:CFG};
+document.addEventListener("DOMContentLoaded",()=>{
+  mountUi();
+  if(MODE==="player") loaded.then(()=>syncPlayer(true));
+  if(MODE==="gm") loaded.then(()=>{if(!token()) openSettings();else if(!st.lastSync&&!Object.keys(st.gm).length) syncGm()});
+});
+window.addEventListener("beforeunload",e=>{if(MODE==="gm"&&st.dirty){e.preventDefault();e.returnValue=""}});
+})();
+
+</script>
+</head>
+<body>
+
+
+<header class="top">
+  <button class="burger" id="burger" aria-label="Оглавление"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4h14M2 9h14M2 14h14"/></svg></button>
+  <a class="brand" href="#home">Эвия<small id="brandsub">архив</small></a>
+  <div class="search"><label class="sr" for="q">Поиск</label><input id="q" type="search" placeholder="Поиск по имени, месту, факту…" autocomplete="off"></div>
+  <span class="syncpill" id="sync"></span>
+  <button class="btn qadd-btn" id="qadd" hidden title="Быстро записать NPC (клавиша N)">+ NPC</button>
+  <div class="modes" id="modes" hidden>
+    <button id="m-gm" aria-pressed="true">Мастер</button>
+    <button id="m-pl" aria-pressed="false">Глазами игрока</button>
+  </div>
+  <button class="menu-btn" id="menubtn" aria-label="Меню" hidden><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="8" cy="13" r="1.4"/></svg></button>
+</header>
+<div id="menu" class="menu" hidden></div>
+<div class="shell">
+  <nav class="side" id="side" aria-label="Оглавление"></nav>
+  <main id="main"><div class="loading">Открываю архив…</div></main>
+</div>
+<div id="toast" class="toast" hidden></div>
+<div id="lightbox" class="lightbox" hidden></div>
+<div id="qadd-modal" class="qa-modal" hidden></div>
+<input type="file" id="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+<input type="file" id="impfile" accept="application/json,.json" hidden>
+
+<script>
+(function(){
+"use strict";
+const CATS=[["world","Мир и космология"],["gods","Боги и тайны Машины"],["empire","Эвийская империя"],["places","Места"],["peoples","Народы"],["factions","Фракции"],["families","Семьи"],["people","Персонажи"],["plots","Сюжетные линии"],["campaign","Кампания"],["rules","Справочники и механики"],["meta","Служебное"]];
+const CATN=Object.fromEntries(CATS);
+const ERAS=["До Заветов","Безвременье","Собирание империи","Золотой век","Предыстория кампании","Кампания"];
+const NEWMS=1000*60*60*24*14;
+const I={
+  eye:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/></svg>',
+  lock:'<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 015 0v2"/></svg>',
+  pen:'<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 2.5l2.5 2.5L6 12.5H3.5V10z"/></svg>',
+  x:'<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg>',
+  up:'<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 13V3M4 7l4-4 4 4"/></svg>'
+};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid=()=>Math.random().toString(36).slice(2,10);
+const clone=o=>JSON.parse(JSON.stringify(o));
+
+const S={mode:"loading",preview:false,arts:new Map(),tl:{events:[]},pub:new Map(),pubTl:{events:[]},route:{v:"home"},q:"",edit:null,db:null,assets:null,downloads:null,eraF:null,visF:"all",tf:{},pick:null,newArt:false,undo:null,busy:0};
+
+/* ---------- data views ---------- */
+function visSet(arts){const s=new Set();for(const a of arts.values()) if((a.names||[]).some(n=>n.o)) s.add(a.id);return s}
+function pubTitle(a){const n=(a.names||[]).find(n=>n.o);return n?n.t:""}
+function linkFilter(t,vis,arts){
+  return String(t||"").replace(/\[\[([a-z0-9_]+)(?:\|([^\]]*))?\]\]/g,(m,id,label)=>{
+    if(vis.has(id)) return "[["+id+"|"+(label!=null?label:pubTitle(arts.get(id)))+"]]";
+    return label!=null?label:"…";
+  });
+}
+function pubOf(a,vis,arts){
+  if(!vis.has(a.id)) return null;
+  const tx=t=>linkFilter(t,vis,arts);
+  return {id:a.id,cat:a.cat,group:a.group||"",order:a.order||0,
+    names:a.names.filter(n=>n.o).map(n=>({id:n.id,t:n.t,o:true})),
+    lead:a.lead&&a.lead.o?{id:a.lead.id,t:tx(a.lead.t),o:true,ot:a.lead.ot||0}:null,
+    sections:a.sections.map(s=>({id:s.id,h:s.h,items:s.items.filter(i=>i.o).map(i=>i.table?{id:i.id,table:i.table,o:true,ot:i.ot||0}:{id:i.id,t:tx(i.t),o:true,ot:i.ot||0})})).filter(s=>s.items.length),
+    images:(a.images||[]).filter(i=>i.o).map(i=>({id:i.id,asset:i.asset,cap:tx(i.cap||""),o:true}))};
+}
+function pubTimeline(tl,vis,arts){return {events:(tl.events||[]).filter(e=>e.o).map(e=>({...e,t:linkFilter(e.t,vis,arts)}))}}
+function view(){
+  if(S.mode==="gm"&&!S.preview) return {arts:S.arts,tl:S.tl,gm:true};
+  if(S.mode==="gm"){const vis=visSet(S.arts);const m=new Map();for(const a of S.arts.values()){const p=pubOf(a,vis,S.arts);if(p)m.set(a.id,p)}return {arts:m,tl:pubTimeline(S.tl,vis,S.arts),gm:false}}
+  return {arts:S.pub,tl:S.pubTl,gm:false};
+}
+function title(a,gm){return gm?(a.names[0]?.t||"Без названия"):(pubTitle(a)||"…")}
+
+/* ---------- formatting ---------- */
+function fmt(t,D){
+  let h=esc(t);
+  h=h.replace(/\\\*/g,"&#42;");
+  h=h.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>");
+  h=h.replace(/\[\[([a-z0-9_]+)(?:\|([^\]]*))?\]\]/g,(m,id,label)=>{
+    const a=D.arts.get(id);
+    if(!a) return '<span class="lk missing" title="Статья не найдена">'+(label||id)+"</span>";
+    const hid=D.gm&&!a.names.some(n=>n.o);
+    return '<a class="lk'+(hid?" hid":"")+'" href="#a-'+id.replace(/_/g,"-")+'"'+(hid?' title="Статья скрыта от игроков"':"")+">"+(label||esc(title(a,D.gm)))+"</a>";
+  });
+  return h;
+}
+function plain(t){return String(t||"").replace(/\[\[[a-z0-9_]+\|([^\]]*)\]\]/g,"$1").replace(/\[\[([a-z0-9_]+)\]\]/g,"$1").replace(/\*\*/g,"")}
+
+/* ---------- routing ---------- */
+function parseHash(){
+  const h=location.hash.slice(1);
+  if(h.startsWith("a-")) return {v:"art",id:h.slice(2).replace(/-/g,"_")};
+  if(h==="timeline") return {v:"tl"};
+  if(h==="map") return {v:"map"};
+  if(h==="glossary") return {v:"gloss"};
+  return {v:"home"};
+}
+window.addEventListener("hashchange",()=>{S.route=parseHash();S.edit=null;S.pick=null;S.newArt=false;closeSide();render();window.scrollTo(0,0)});
+
+/* ---------- render ---------- */
+function render(){renderSide();renderMain();renderTop()}
+function renderTop(){
+  $("#modes").hidden=S.mode!=="gm";
+  $("#qadd").hidden=!(S.mode==="gm"&&!S.preview);
+  $("#menubtn").hidden=!(S.mode==="gm"||S.mode==="player");
+  $("#m-gm").setAttribute("aria-pressed",String(!S.preview));
+  $("#m-pl").setAttribute("aria-pressed",String(S.preview));
+  $("#brandsub").textContent=S.mode==="gm"?(S.preview?"как видят игроки":"архив мастера"):"архив";
+  $("#sync").textContent=S.busy?"сохраняю…":"";
+}
+function sortArts(list){return list.sort((a,b)=>(a.order||0)-(b.order||0)||title(a,true).localeCompare(title(b,true),"ru"))}
+function renderSide(){
+  const D=view();const q=S.q.trim().toLowerCase();
+  const cur=S.route.v==="art"?S.route.id:null;
+  let h='<ul class="navtop"><li><a href="#home"'+(S.route.v==="home"?' aria-current="page"':"")+'>Главная</a></li><li><a href="#timeline"'+(S.route.v==="tl"?' aria-current="page"':"")+'>Хронология</a></li><li><a href="#map"'+(S.route.v==="map"?' aria-current="page"':"")+'>Карта</a></li><li><a href="#glossary"'+(S.route.v==="gloss"?' aria-current="page"':"")+'>Глоссарий</a></li></ul>';
+  for(const [c,cn] of CATS){
+    const list=sortArts([...D.arts.values()].filter(a=>a.cat===c));
+    if(!list.length) continue;
+    h+="<h4>"+esc(cn)+"</h4>";
+    const groups=c==="people"?[...new Set(list.map(a=>a.group||"Прочие"))]:[null];
+    for(const g of groups){
+      if(g) h+="<h5>"+esc(g)+"</h5>";
+      h+="<ul>";
+      for(const a of list.filter(a=>!g||(a.group||"Прочие")===g)){
+        const t=title(a,D.gm);
+        const dot=D.gm?'<span class="dot'+(a.names.some(n=>n.o)?" on":"")+'" title="'+(a.names.some(n=>n.o)?"Видна игрокам":"Скрыта от игроков")+'"></span>':"";
+        h+='<li><a href="#a-'+a.id.replace(/_/g,"-")+'"'+(cur===a.id?' aria-current="page"':"")+">"+dot+"<span>"+esc(t)+"</span></a></li>";
+      }
+      h+="</ul>";
+    }
+  }
+  if(D.gm) h+='<button class="newbtn" data-act="newart">+ Новая статья</button>';
+  $("#side").innerHTML=h;
+}
+function renderMain(){
+  const m=$("#main");
+  if(S.mode==="loading"){m.innerHTML='<div class="loading">Открываю архив…</div>';return}
+  if(S.mode==="noaccess"){m.innerHTML='<div class="page empty"><h1 class="title">Архив закрыт</h1><p>Чтобы читать вики, войдите в claude.ai под аккаунтом, которому мастер открыл доступ, и обновите страницу.</p></div>';return}
+  const D=view();
+  if(S.newArt){m.innerHTML=newArtForm();return}
+  if(S.q.trim()){m.innerHTML=searchView(D);return}
+  if(S.route.v==="tl"){m.innerHTML=timelineView(D);return}
+  if(S.route.v==="gloss"){m.innerHTML=glossaryView(D);glFilter();return}
+  if(S.route.v==="map"){m.innerHTML='<div class="page"><div class="crumb">Эвия и Врата Балдура</div><h1 class="title">Карта</h1><div class="wip"><b>WIP</b><p>Карта в работе. Скоро здесь появится интерактивная карта с метками мест из вики.</p></div></div>';return}
+  if(S.route.v==="art"){m.innerHTML=articleView(D,S.route.id);return}
+  m.innerHTML=homeView(D);
+}
+
+function counts(){
+  let tot=0,op=0;
+  for(const a of S.arts.values()){const all=[a.lead,...a.sections.flatMap(s=>s.items)].filter(Boolean);tot+=all.length;op+=all.filter(i=>i.o).length}
+  return {tot,op};
+}
+function recentOpened(D,n){
+  const out=[];
+  for(const a of D.arts.values()){
+    for(const s of a.sections) for(const i of s.items) if(i.o&&i.ot) out.push({a,i});
+    if(a.lead&&a.lead.o&&a.lead.ot) out.push({a,i:a.lead});
+  }
+  for(const e of D.tl.events||[]) if(e.o&&e.ot) out.push({e,i:e});
+  return out.sort((x,y)=>y.i.ot-x.i.ot).slice(0,n);
+}
+function homeView(D){
+  const arts=[...D.arts.values()];
+  let h='<div class="page"><div class="hero"><div class="crumb">Сеттинг кампании · 325 г. СЗ / 1841 ДС</div><h1>Архив Эвии</h1>';
+  if(D.gm){
+    const c=counts();const vis=arts.filter(a=>a.names.some(n=>n.o)).length;
+    h+='<p>Всё, что известно мастеру. Каждый факт — отдельная строка: <span style="color:var(--verd)">глаз</span> — игроки его видят, <span style="color:var(--secret)">замок</span> — нет. Нажмите на значок, чтобы открыть или скрыть факт.</p>';
+    h+='<div class="stats"><div class="stat"><b>'+arts.length+'</b><span>статей</span></div><div class="stat"><b>'+vis+'</b><span>видны игрокам</span></div><div class="stat"><b>'+c.op+' / '+c.tot+'</b><span>фактов открыто</span></div><div class="stat"><b>'+(S.tl.events||[]).length+'</b><span>событий в хронологии</span></div></div>';
+    h+='<div class="bar"><i style="width:'+(c.tot?Math.round(c.op/c.tot*100):0)+'%"></i></div>';
+    h+='<div class="legend"><span><span class="eye on" style="width:auto;height:auto">'+I.eye+'</span>открыто игрокам</span><span><span class="eye" style="width:auto;height:auto">'+I.lock+'</span>только мастеру</span><span><span class="dot on"></span>статья видна</span><span><span class="dot"></span>статья скрыта</span></div>';
+  } else {
+    h+='<p>Энциклопедия мира кампании: то, что ваши персонажи знают об империи, её церкви, людях и прошлом. Новые сведения появляются здесь по ходу игры.</p>';
+  }
+  h+="</div>";
+  if(!arts.length){h+='<div class="empty">'+(D.gm?"Архив пока пуст.":"Мастер ещё ничего не открыл.")+"</div></div>";return h}
+  const rec=recentOpened(D,8);
+  if(rec.length){
+    h+='<div class="recent"><h2>'+(D.gm?"Недавно открыто игрокам":"Недавно узнали")+'</h2><ul>';
+    for(const r of rec){
+      if(r.e) h+='<li><a href="#timeline">Хронология</a> — '+fmt(cut(plain(r.e.t)),D)+"</li>";
+      else h+='<li><a href="#a-'+r.a.id.replace(/_/g,"-")+'">'+esc(title(r.a,D.gm))+"</a> — "+esc(cut(plain(r.i.t||"таблица")))+"</li>";
+    }
+    h+="</ul></div>";
+  }
+  h+='<div class="cats">';
+  for(const [c,cn] of CATS){
+    const list=sortArts(arts.filter(a=>a.cat===c));if(!list.length) continue;
+    h+='<div class="cat"><h3>'+esc(cn)+'</h3><p>'+list.length+" "+plural(list.length,"статья","статьи","статей")+'</p><ul>';
+    for(const a of list.slice(0,6)) h+='<li><a href="#a-'+a.id.replace(/_/g,"-")+'">'+esc(title(a,D.gm))+"</a></li>";
+    if(list.length>6) h+='<li class="hint">и ещё '+(list.length-6)+"</li>";
+    h+="</ul></div>";
+  }
+  return h+"</div></div>";
+}
+function cut(s,n=140){s=String(s);return s.length>n?s.slice(0,n-1)+"…":s}
+function plural(n,a,b,c){const m=n%10,k=n%100;return m===1&&k!==11?a:m>=2&&m<=4&&(k<12||k>14)?b:c}
+
+function eyeBtn(o,act,attrs,sm){return '<button class="eye'+(o?" on":"")+(sm?" sm":"")+'" data-act="'+act+'" '+attrs+' aria-label="'+(o?"Скрыть от игроков":"Открыть игрокам")+'" title="'+(o?"Видно игрокам — нажмите, чтобы скрыть":"Скрыто — нажмите, чтобы открыть игрокам")+'">'+(o?I.eye:I.lock)+"</button>"}
+function isNew(i){return i.ot&&Date.now()-i.ot<NEWMS}
+
+function quantum(a,i,D,kind){
+  const attrs='data-a="'+a.id+'" data-q="'+i.id+'"';
+  const editing=S.edit&&S.edit.q===i.id&&S.edit.a===a.id;
+  if(!D.gm){
+    return '<div class="q player'+(isNew(i)?" new":"")+'"><div class="qt">'+(i.table?tableHtml(i,a):"<p>"+fmt(i.t,D)+"</p>")+"</div></div>";
+  }
+  let body;
+  if(editing&&!i.table) body=editorHtml(i.t,kind==="lead"?"Короткое описание статьи":"");
+  else body=i.table?tableHtml(i,a):"<p>"+fmt(i.t,D)+"</p>";
+  return '<div class="q '+(i.o?"open":"closed")+'">'+eyeBtn(i.o,"tq",attrs)+'<div class="qt">'+body+'</div><div class="qtools">'+
+    (i.table||editing?"":'<button class="tool" data-act="eq" '+attrs+' aria-label="Изменить" title="Изменить">'+I.pen+"</button>")+
+    (kind==="lead"||editing?"":'<button class="tool" data-act="uq" '+attrs+' aria-label="Выше" title="Поднять выше">'+I.up+'</button><button class="tool" data-act="dq" '+attrs+' aria-label="Удалить" title="Удалить">'+I.x+"</button>")+"</div></div>";
+}
+function editorHtml(t,hint){
+  return '<div class="editor"><label class="sr" for="ed">Текст</label><textarea id="ed">'+esc(t)+'</textarea><div class="row"><button class="btn pri" data-act="save">Сохранить</button><button class="btn" data-act="cancel">Отмена</button><button class="btn" data-act="pick">Вставить ссылку</button><span class="hint">'+(hint?esc(hint)+" · ":"")+'**жирный** · [[id|текст]] — ссылка · Ctrl+Enter — сохранить</span></div>'+(S.pick!=null?pickerHtml():"")+"</div>";
+}
+function pickerHtml(){
+  const q=S.pick.toLowerCase();
+  const list=sortArts([...S.arts.values()].filter(a=>!q||a.names.some(n=>n.t.toLowerCase().includes(q)))).slice(0,30);
+  return '<div><label class="sr" for="pickq">Найти статью</label><input id="pickq" placeholder="Найти статью…" value="'+esc(S.pick)+'"><div class="picker">'+list.map(a=>'<button data-act="ins" data-id="'+a.id+'">'+esc(a.names[0]?.t||a.id)+' <span class="hint">'+esc(CATN[a.cat]||"")+"</span></button>").join("")+"</div></div>";
+}
+function tableHtml(i,a){
+  const tb=i.table,key=i.id,f=(S.tf[key]||"").toLowerCase();
+  const big=tb.rows.length>20;
+  const groupCol=big&&/Категория/i.test(tb.cols[0]);
+  let rows=tb.rows.filter(r=>!f||r.join(" ").toLowerCase().includes(f));
+  let h=big?'<label class="sr" for="tf-'+key+'">Фильтр таблицы</label><input class="tfilter" id="tf-'+key+'" data-tf="'+key+'" placeholder="Найти в таблице…" value="'+esc(S.tf[key]||"")+'">':"";
+  h+='<div class="tw"><table><thead><tr>'+(groupCol?tb.cols.slice(1):tb.cols).map(c=>"<th>"+esc(c)+"</th>").join("")+"</tr></thead><tbody>";
+  let last=null;
+  for(const r of rows){
+    if(groupCol){if(r[0]!==last){h+='<tr><td class="grp" colspan="'+(tb.cols.length-1)+'">'+esc(r[0])+"</td></tr>";last=r[0]}h+="<tr>"+r.slice(1).map(c=>"<td>"+esc(c)+"</td>").join("")+"</tr>"}
+    else h+="<tr>"+r.map(c=>"<td>"+esc(c)+"</td>").join("")+"</tr>";
+  }
+  if(!rows.length) h+='<tr><td colspan="'+tb.cols.length+'" class="hint">Ничего не найдено.</td></tr>';
+  return h+"</tbody></table></div>";
+}
+function imgSrc(asset){return window.__imgSrc?window.__imgSrc(asset):"/_blob/"+asset}
+
+function articleView(D,id){
+  const a=D.arts.get(id);
+  if(!a) return '<div class="page empty"><h1 class="title">Статья не найдена</h1><p>'+(D.gm?"Возможно, её удалили.":"Её нет — или мастер ещё не открыл её.")+' <a href="#home">На главную</a></p></div>';
+  const gm=D.gm;
+  let h='<article class="page"><div class="crumb">'+esc(CATN[a.cat]||"")+(a.group?" · "+esc(a.group):"")+"</div>";
+  if(gm&&S.edit&&S.edit.kind==="title"&&S.edit.a===a.id){
+    h+='<div class="editor" style="margin:10px 0"><label class="sr" for="ed">Название</label><input id="ed" value="'+esc(a.names[0]?.t||"")+'"><div class="row"><button class="btn pri" data-act="save">Сохранить</button><button class="btn" data-act="cancel">Отмена</button></div></div>';
+  } else h+='<h1 class="title">'+esc(title(a,gm))+"</h1>";
+  // names
+  if(gm){
+    h+='<div class="names">';
+    a.names.forEach((n,k)=>{
+      const editing=S.edit&&S.edit.kind==="name"&&S.edit.q===n.id;
+      if(editing) h+='<span class="chip"><label class="sr" for="ed">Имя</label><input id="ed" value="'+esc(n.t)+'" style="padding:2px 8px"><button class="tool" data-act="save" aria-label="Сохранить">✓</button><button class="tool" data-act="cancel" aria-label="Отмена">'+I.x+"</button></span>";
+      else h+='<span class="chip '+(n.o?"open":"closed")+'">'+eyeBtn(n.o,"tn",'data-a="'+a.id+'" data-q="'+n.id+'"',true)+"<span>"+esc(n.t)+'</span><button class="tool" style="width:20px;height:20px" data-act="en" data-a="'+a.id+'" data-q="'+n.id+'" aria-label="Изменить имя">'+I.pen+"</button>"+(k>0?'<button class="tool" style="width:20px;height:20px" data-act="dn" data-a="'+a.id+'" data-q="'+n.id+'" aria-label="Удалить имя">'+I.x+"</button>":"")+"</span>";
+    });
+    h+='<button class="textbtn" data-act="an" data-a="'+a.id+'">+ имя / псевдоним</button></div>';
+    if(!a.names.some(n=>n.o)) h+='<p class="hint" style="margin:-6px 0 12px">Статья скрыта от игроков: ни одно имя не открыто. Откройте имя — и она появится у игроков вместе с открытыми фактами.</p>';
+  } else if(a.names.length>1){
+    h+='<div class="names">'+a.names.slice(1).map(n=>'<span class="chip plain">'+esc(n.t)+"</span>").join("")+"</div>";
+  }
+  if(a.lead) h+='<div class="lead">'+(gm?quantum(a,a.lead,D,"lead"):fmt(a.lead.t,D))+"</div>";
+  else if(gm) h+='<div class="addrow" style="margin:0 0 16px"><button data-act="addlead" data-a="'+a.id+'">+ короткое описание</button></div>';
+  // images
+  const imgs=a.images||[];
+  if(imgs.length||(gm&&S.assets)){
+    h+='<div class="gallery">';
+    for(const im of imgs){
+      const editing=S.edit&&S.edit.kind==="cap"&&S.edit.q===im.id;
+      h+='<figure class="img '+(im.o?"open":"closed")+'"><div class="ph" data-act="zoom" data-src="'+esc(imgSrc(im.asset))+'"><img loading="lazy" src="'+esc(imgSrc(im.asset))+'" alt="'+esc(plain(im.cap)||"Иллюстрация")+'"></div><figcaption>';
+      if(gm&&editing) h+='<span><label class="sr" for="ed">Подпись</label><input id="ed" value="'+esc(im.cap||"")+'" style="width:100%;padding:2px 6px"></span><button class="tool" data-act="save" aria-label="Сохранить">✓</button>';
+      else {
+        if(gm) h+=eyeBtn(im.o,"ti",'data-a="'+a.id+'" data-q="'+im.id+'"');
+        h+="<span>"+(im.cap?fmt(im.cap,D):(gm?'<i>без подписи</i>':""))+"</span>";
+        if(gm) h+='<button class="tool" data-act="ec" data-a="'+a.id+'" data-q="'+im.id+'" aria-label="Подпись">'+I.pen+'</button><button class="tool" data-act="di" data-a="'+a.id+'" data-q="'+im.id+'" aria-label="Убрать картинку">'+I.x+"</button>";
+      }
+      h+="</figcaption></figure>";
+    }
+    h+="</div>";
+  }
+  if(gm&&S.assets) h+='<div class="addrow" style="margin:0 0 6px"><button data-act="addimg" data-a="'+a.id+'">+ иллюстрация</button></div>';
+  // sections
+  a.sections.forEach((s,si)=>{
+    const editingH=S.edit&&S.edit.kind==="sec"&&S.edit.q===s.id;
+    h+='<section class="sec"><h2>';
+    if(editingH) h+='<span class="h"><label class="sr" for="ed">Заголовок</label><input id="ed" value="'+esc(s.h)+'" style="width:100%;font-size:18px"></span><span class="secbtns"><button class="btn pri" data-act="save">Сохранить</button><button class="btn" data-act="cancel">Отмена</button></span>';
+    else {
+      h+='<span class="h">'+esc(s.h)+"</span>";
+      if(gm){
+        const op=s.items.filter(i=>i.o).length;
+        h+='<span class="secbtns"><span class="hint mono" title="Открыто игрокам">'+op+"/"+s.items.length+'</span><button class="tool" data-act="secall" data-a="'+a.id+'" data-q="'+s.id+'" data-v="1" title="Открыть весь раздел">все ✓</button><button class="tool" data-act="secall" data-a="'+a.id+'" data-q="'+s.id+'" data-v="0" title="Скрыть весь раздел">скрыть</button><button class="tool" data-act="es" data-a="'+a.id+'" data-q="'+s.id+'" aria-label="Переименовать раздел">'+I.pen+'</button><button class="tool" data-act="ds" data-a="'+a.id+'" data-q="'+s.id+'" aria-label="Удалить раздел">'+I.x+"</button></span>";
+      }
+    }
+    h+="</h2>";
+    for(const i of s.items) h+=quantum(a,i,D);
+    if(gm) h+='<div class="addrow"><button data-act="aq" data-a="'+a.id+'" data-q="'+s.id+'">+ факт</button></div>';
+    h+="</section>";
+  });
+  if(gm) h+='<div class="addrow" style="margin-left:0;margin-top:22px"><button data-act="asec" data-a="'+a.id+'">+ раздел</button></div>';
+  // backlinks
+  const back=[];
+  const re=new RegExp("\\[\\["+a.id+"[|\\]]");
+  for(const b of D.arts.values()) if(b.id!==a.id&&re.test(JSON.stringify([b.lead,b.sections,b.images]))) back.push(b);
+  const tlHit=(D.tl.events||[]).some(e=>re.test(e.t));
+  if(back.length||tlHit){
+    h+='<div class="back"><h3>Упоминается в</h3><ul>'+sortArts(back).map(b=>'<li><a href="#a-'+b.id.replace(/_/g,"-")+'">'+esc(title(b,gm))+"</a></li>").join("")+(tlHit?'<li><a href="#timeline">Хронология</a></li>':"")+"</ul></div>";
+  }
+  if(gm){
+    h+='<div class="gmfoot"><span class="hint mono">id: '+esc(a.id)+'</span><button class="textbtn" data-act="ecat" data-a="'+a.id+'">Переместить</button><button class="textbtn danger" data-act="delart" data-a="'+a.id+'">Удалить статью</button></div>';
+    if(S.edit&&S.edit.kind==="cat"&&S.edit.a===a.id){
+      h+='<div class="newform" style="margin-top:12px"><label>Раздел вики<select id="ed">'+CATS.map(([c,n])=>'<option value="'+c+'"'+(c===a.cat?" selected":"")+">"+esc(n)+"</option>").join("")+'</select></label><label>Группа (для персонажей)<input id="ed2" value="'+esc(a.group||"")+'"></label><div class="row" style="display:flex;gap:8px"><button class="btn pri" data-act="save">Сохранить</button><button class="btn" data-act="cancel">Отмена</button></div></div>';
+    }
+  }
+  return h+"</article>";
+}
+
+function zLabel(z){return z>=1?z+" г. СЗ":(1-z)+" г. до СЗ"}
+function dateBlock(e){
+  if(e.zf==null) return '<b>—</b><i>дата не установлена</i>';
+  const ap=e.ap?"≈":"";
+  const dr=ap+(e.zf+1516)+(e.zt!=null?"–"+(e.zt+1516):"")+" ДС";
+  let zs;
+  if(e.zt!=null){zs=e.zf>=1&&e.zt>=1?ap+e.zf+"–"+e.zt+" гг. СЗ":ap+zLabel(e.zf)+" – "+zLabel(e.zt)}
+  else zs=ap+zLabel(e.zf);
+  return "<b>"+esc(dr)+"</b><i>"+esc(zs)+"</i>"+(e.day?"<em>"+esc(e.day)+"</em>":"");
+}
+function timelineView(D){
+  const gm=D.gm;
+  let ev=(D.tl.events||[]).slice();
+  const eras=[...new Set([...ERAS,...ev.map(e=>e.era)])].filter(x=>ev.some(e=>e.era===x));
+  let h='<div class="page"><div class="crumb">ДС = СЗ + 1516</div><h1 class="title">Хронология</h1>';
+  h+='<div class="tl-filters"><button class="fchip" data-act="eraf" data-v="" aria-pressed="'+(!S.eraF)+'">Все эпохи</button>'+eras.map(x=>'<button class="fchip" data-act="eraf" data-v="'+esc(x)+'" aria-pressed="'+(S.eraF===x)+'">'+esc(x)+"</button>").join("");
+  if(gm) h+='<span style="width:12px"></span>'+[["all","Все"],["open","Открытые"],["closed","Скрытые"]].map(([k,n])=>'<button class="fchip" data-act="visf" data-v="'+k+'" aria-pressed="'+(S.visF===k)+'">'+n+"</button>").join("");
+  h+="</div>";
+  if(S.eraF) ev=ev.filter(e=>e.era===S.eraF);
+  if(gm&&S.visF!=="all") ev=ev.filter(e=>S.visF==="open"?e.o:!e.o);
+  if(!ev.length) h+='<div class="empty">'+(gm?"Событий нет.":"Мастер пока не открыл ни одного события.")+"</div>";
+  let lastEra=null;
+  for(const e of ev){
+    if(e.era!==lastEra){h+='<div class="era">'+esc(e.era)+"</div>";lastEra=e.era}
+    const editing=gm&&S.edit&&S.edit.kind==="ev"&&S.edit.q===e.id;
+    const attrs='data-q="'+e.id+'"';
+    h+='<div class="ev '+(gm?(e.o?"open":"closed"):"player")+'"><div class="when">'+dateBlock(e)+'</div><div class="body">';
+    if(!gm){h+='<div class="qt">'+fmt(e.t,D)+(isNew(e)?' <span class="hint mono" style="color:var(--verd)">НОВОЕ</span>':"")+"</div></div></div>";continue}
+    h+=eyeBtn(e.o,"te",attrs);
+    if(editing){
+      h+='<div class="editor"><div class="evform"><label>С года СЗ<input id="ev-zf" type="number" value="'+(e.zf??"")+'"></label><label>По год СЗ<input id="ev-zt" type="number" value="'+(e.zt??"")+'"></label><label>День, месяц<input id="ev-day" value="'+esc(e.day||"")+'"></label><label>Эпоха<input id="ev-era" list="eras" value="'+esc(e.era||"")+'"></label><label style="flex-direction:row;display:flex;gap:6px;align-items:center"><input id="ev-ap" type="checkbox"'+(e.ap?" checked":"")+'> приблизительно</label></div><datalist id="eras">'+ERAS.map(x=>'<option value="'+esc(x)+'">').join("")+'</datalist><span class="hint">Годы до Заветов: 0 = 1516 ДС, −1 = 1515 ДС.</span>'+editorHtml(e.t,"").replace('<div class="editor">',"").replace(/<\/div>$/,"")+"</div>";
+      h+="<div></div>";
+    } else {
+      h+='<div class="qt">'+fmt(e.t,D)+'</div><div class="qtools"><button class="tool" data-act="ee" '+attrs+' aria-label="Изменить">'+I.pen+'</button><button class="tool" data-act="de" '+attrs+' aria-label="Удалить">'+I.x+"</button></div>";
+    }
+    h+="</div></div>";
+  }
+  if(gm) h+='<div class="addrow" style="margin:18px 0 0"><button data-act="ae">+ событие</button></div>';
+  return h+"</div>";
+}
+
+function searchView(D){
+  const q=S.q.trim().toLowerCase();
+  const hl=s=>esc(s).replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"gi"),m=>"<mark>"+m+"</mark>");
+  const res=[];
+  for(const a of D.arts.values()){
+    let score=0,snip="";
+    if(a.names.some(n=>n.t.toLowerCase().includes(q))) score+=10;
+    const items=[a.lead,...a.sections.flatMap(s=>s.items)].filter(i=>i&&!i.table);
+    for(const i of items){const p=plain(i.t);const k=p.toLowerCase().indexOf(q);if(k>=0){score+=1;if(!snip)snip=(k>40?"…":"")+p.slice(Math.max(0,k-40),k+110)}}
+    if(score) res.push({a,score,snip});
+  }
+  res.sort((x,y)=>y.score-x.score);
+  const evs=(D.tl.events||[]).filter(e=>plain(e.t).toLowerCase().includes(q));
+  let h='<div class="page"><div class="crumb">Поиск</div><h1 class="title">«'+esc(S.q.trim())+'»</h1>';
+  if(!res.length&&!evs.length) return h+'<div class="empty">Ничего не нашлось. Попробуйте другую форму слова.</div></div>';
+  h+='<ul class="results" style="list-style:none;padding:0">';
+  for(const r of res.slice(0,60)) h+='<li><a href="#a-'+r.a.id.replace(/_/g,"-")+'" data-act="clearq">'+hl(title(r.a,D.gm))+'</a> <span class="hint">'+esc(CATN[r.a.cat]||"")+"</span>"+(r.snip?'<div class="snip">'+hl(r.snip)+"</div>":"")+"</li>";
+  for(const e of evs.slice(0,30)) h+='<li><a href="#timeline" data-act="clearq">Хронология</a> <span class="hint mono">'+(e.zf!=null?(e.zf+1516)+" ДС":"")+'</span><div class="snip">'+hl(cut(plain(e.t),200))+"</div></li>";
+  return h+"</ul></div>";
+}
+function newArtForm(){
+  return '<div class="page"><h1 class="title">Новая статья</h1><div class="newform"><label>Название<input id="na-t" placeholder="Например, Сэр Ранульф"></label><label>Раздел вики<select id="na-c">'+CATS.map(([c,n])=>'<option value="'+c+'"'+(c==="people"?" selected":"")+">"+esc(n)+"</option>").join("")+'</select></label><label>Группа (для персонажей)<input id="na-g" placeholder="Например, Искатели"></label><p class="hint" style="margin:0">Статья создаётся скрытой от игроков.</p><div style="display:flex;gap:8px"><button class="btn pri" data-act="createart">Создать</button><button class="btn" data-act="cancelnew">Отмена</button></div></div></div>';
+}
+
+/* ---------- writes ---------- */
+let wq=Promise.resolve();
+function queue(fn){S.busy++;renderTop();wq=wq.then(fn).catch(err=>{console.error(err);toast(errText(err))}).finally(()=>{S.busy--;renderTop();applyPending()});return wq}
+function errText(e){
+  const c=e&&e.code;
+  if(c==="quota_exceeded") return "Хранилище вики заполнено — изменения не сохранились.";
+  if(c==="invalid_argument") return "Сохранить не удалось: нет прав на изменение.";
+  return "Не удалось сохранить. Проверьте соединение и повторите.";
+}
+function refsTo(id){const re=new RegExp("\\[\\["+id+"[|\\]]");const out=[];for(const b of S.arts.values()) if(re.test(JSON.stringify([b.lead,b.sections,b.images]))) out.push(b.id);return out}
+function xnorm(v){
+  // дополнения, записанные отдельно (xsections / xevents), вливаются в основной массив
+  if(v&&Array.isArray(v.xsections)){const ids=new Set((v.sections||[]).map(s=>s.id));v.sections=(v.sections||[]).concat(v.xsections.filter(s=>!ids.has(s.id)));delete v.xsections}
+  if(v&&Array.isArray(v.xevents)){const ev=(v.events||[]).slice();const ids=new Set(ev.map(e=>e.id));
+    for(const x of v.xevents){if(ids.has(x.id)) continue;const k=ev.findIndex(e=>(e.ord||0)>(x.ord||0));if(k<0) ev.push(x);else ev.splice(k,0,x)}
+    v.events=ev;delete v.xevents}
+  return v;
+}
+function saveArt(a,prev,opts={}){
+  a.updated=Date.now();
+  const before=visSet(S.arts);
+  S.arts.set(a.id,a);
+  const after=visSet(S.arts);
+  const flipped=[...new Set([...before,...after])].filter(x=>before.has(x)!==after.has(x));
+  if(!opts.noUndo&&prev) S.undo={type:"art",prev};
+  render();
+  const targets=new Set([a.id]);
+  for(const f of flipped) for(const r of refsTo(f)) targets.add(r);
+  const tlToo=flipped.length>0;
+  queue(async()=>{
+    await S.db.collection("gm").doc(a.id).set(a);
+    await syncPub([...targets],tlToo);
+  });
+}
+async function syncPub(ids,tlToo){
+  const vis=visSet(S.arts);
+  for(const id of ids){
+    const a=S.arts.get(id);const ref=S.db.collection("pub").doc(id);
+    const p=a?pubOf(a,vis,S.arts):null;
+    if(p) await ref.set(p); else await ref.delete();
+  }
+  if(tlToo) await S.db.collection("pub").doc("_timeline").set(pubTimeline(S.tl,vis,S.arts));
+}
+function saveTl(prev){
+  if(prev) S.undo={type:"tl",prev};
+  render();
+  queue(async()=>{
+    await S.db.collection("gm").doc("_timeline").set(S.tl);
+    await S.db.collection("pub").doc("_timeline").set(pubTimeline(S.tl,visSet(S.arts),S.arts));
+  });
+}
+async function rebuildAll(){
+  toast("Пересобираю версию для игроков…");
+  await queue(async()=>{
+    const vis=visSet(S.arts);
+    const existing=await S.db.collection("pub").get();
+    let n=0;
+    for(const a of S.arts.values()){const p=pubOf(a,vis,S.arts);if(p){await S.db.collection("pub").doc(a.id).set(p);n++}}
+    for(const d of existing.docs) if(d.id!=="_timeline"&&!vis.has(d.id)) await S.db.collection("pub").doc(d.id).delete();
+    await S.db.collection("pub").doc("_timeline").set(pubTimeline(S.tl,vis,S.arts));
+    toast("Готово: игрокам видно "+n+" "+plural(n,"статья","статьи","статей")+".");
+  });
+}
+function findItem(a,qid){
+  if(a.lead&&a.lead.id===qid) return {item:a.lead,sec:null,kind:"lead"};
+  for(const s of a.sections){const k=s.items.findIndex(i=>i.id===qid);if(k>=0) return {item:s.items[k],sec:s,idx:k}}
+  return null;
+}
+
+/* ---------- actions ---------- */
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-act]");
+  if(!b) {if(!e.target.closest("#menu")&&!e.target.closest("#menubtn")) $("#menu").hidden=true;return}
+  const act=b.dataset.act,aid=b.dataset.a,qid=b.dataset.q;
+  const a0=aid?S.arts.get(aid):null;
+  const mut=fn=>{const prev=clone(a0);const a=clone(a0);const r=fn(a);if(r===false) return;saveArt(a,prev)};
+  switch(act){
+    case "tq": mut(a=>{const f=findItem(a,qid);f.item.o=!f.item.o;if(f.item.o){f.item.ot=Date.now();autoName(a)}});break;
+    case "tn": mut(a=>{const n=a.names.find(n=>n.id===qid);n.o=!n.o});break;
+    case "ti": mut(a=>{const im=a.images.find(i=>i.id===qid);im.o=!im.o;if(im.o) autoName(a)});break;
+    case "secall": mut(a=>{const s=a.sections.find(s=>s.id===qid);const v=b.dataset.v==="1";for(const i of s.items){if(v&&!i.o) i.ot=Date.now();i.o=v}if(v) autoName(a)});break;
+    case "eq": S.edit={kind:"q",a:aid,q:qid};S.pick=null;renderMain();focusEd();break;
+    case "en": S.edit={kind:"name",a:aid,q:qid};renderMain();focusEd();break;
+    case "es": S.edit={kind:"sec",a:aid,q:qid};renderMain();focusEd();break;
+    case "ec": S.edit={kind:"cap",a:aid,q:qid};renderMain();focusEd();break;
+    case "ecat": S.edit={kind:"cat",a:aid};renderMain();break;
+    case "ee": S.edit={kind:"ev",q:qid};S.pick=null;renderMain();focusEd();break;
+    case "cancel": cancelEdit();break;
+    case "save": commitEdit();break;
+    case "pick": S.pick=S.pick==null?"":null;renderMain();if(S.pick!=null) $("#pickq")?.focus();break;
+    case "ins": insertLink(b.dataset.id);break;
+    case "dq": mut(a=>{const f=findItem(a,qid);f.sec.items.splice(f.idx,1)});toastUndo("Факт удалён.");break;
+    case "uq": mut(a=>{const f=findItem(a,qid);if(!f.idx) return false;f.sec.items.splice(f.idx,1);f.sec.items.splice(f.idx-1,0,f.item)});break;
+    case "dn": mut(a=>{a.names=a.names.filter(n=>n.id!==qid)});toastUndo("Имя удалено.");break;
+    case "an": mut(a=>{const id=a.id+"-n"+uid();a.names.push({id,t:"Новое имя",o:false});S.edit={kind:"name",a:a.id,q:id}});focusEd();break;
+    case "addlead": mut(a=>{a.lead={id:a.id+"-lead"+uid(),t:"",o:false};S.edit={kind:"q",a:a.id,q:a.lead.id}});focusEd();break;
+    case "aq": mut(a=>{const s=a.sections.find(s=>s.id===qid);const id=a.id+"-q"+uid();s.items.push({id,t:"",o:false});S.edit={kind:"q",a:a.id,q:id}});focusEd();break;
+    case "ds": mut(a=>{a.sections=a.sections.filter(s=>s.id!==qid)});toastUndo("Раздел удалён.");break;
+    case "asec": mut(a=>{const id=a.id+"-s"+uid();a.sections.push({id,h:"Новый раздел",items:[]});S.edit={kind:"sec",a:a.id,q:id}});focusEd();break;
+    case "di": mut(a=>{a.images=a.images.filter(i=>i.id!==qid)});toastUndo("Иллюстрация убрана.");break;
+    case "addimg": S.uploadFor=aid;$("#file").value="";$("#file").click();break;
+    case "zoom": {const lb=$("#lightbox");lb.innerHTML='<img alt="" src="'+esc(b.dataset.src)+'">';lb.hidden=false;break}
+    case "delart": {const prev=clone(a0);S.arts.delete(aid);S.undo={type:"del",prev};location.hash="#home";render();
+      queue(async()=>{await S.db.collection("gm").doc(aid).delete();await syncPub([aid,...refsTo(aid)],true)});toastUndo("Статья удалена.");break}
+    case "newart": S.newArt=true;S.q="";$("#q").value="";closeSide();render();$("#na-t")?.focus();break;
+    case "cancelnew": S.newArt=false;render();break;
+    case "createart": createArt();break;
+    case "te": {const prev=clone(S.tl);const ev=S.tl.events.find(x=>x.id===qid);ev.o=!ev.o;if(ev.o) ev.ot=Date.now();saveTl(prev);break}
+    case "de": {const prev=clone(S.tl);S.tl.events=S.tl.events.filter(x=>x.id!==qid);saveTl(prev);toastUndo("Событие удалено.");break}
+    case "ae": {const prev=clone(S.tl);const id="tl"+uid();S.tl.events.push({id,zf:325,zt:null,ap:false,day:"",era:"Кампания",o:false,t:""});S.edit={kind:"ev",q:id};saveTl(prev);focusEd();break}
+    case "eraf": S.eraF=b.dataset.v||null;renderMain();break;
+    case "visf": S.visF=b.dataset.v;renderMain();break;
+    case "clearq": S.q="";$("#q").value="";break;
+    case "undo": doUndo();break;
+    case "rebuild": $("#menu").hidden=true;rebuildAll();break;
+    case "exportpl": $("#menu").hidden=true;exportPlayers();break;
+    case "backup": $("#menu").hidden=true;backup();break;
+    case "import": $("#menu").hidden=true;$("#impfile").value="";$("#impfile").click();break;
+  }
+});
+document.addEventListener("error",e=>{const t=e.target;if(t&&t.tagName==="IMG"&&t.closest(".ph")){const sp=document.createElement("span");sp.className="hint";sp.textContent="Изображение недоступно";t.replaceWith(sp)}},true);
+$("#lightbox").addEventListener("click",()=>{$("#lightbox").hidden=true});
+function autoName(a){if(!a.names.some(n=>n.o)&&a.names[0]){a.names[0].o=true;setTimeout(()=>toast("Статья «"+a.names[0].t+"» теперь видна игрокам."),50)}}
+function focusEd(){requestAnimationFrame(()=>{const el=$("#ed")||$("#ev-zf");if(el){el.focus();if(el.setSelectionRange&&el.tagName==="TEXTAREA") el.setSelectionRange(el.value.length,el.value.length)}})}
+function insertLink(id){
+  const ta=$("#ed");const a=S.arts.get(id);if(!ta||!a) return;
+  const sel=ta.value.slice(ta.selectionStart,ta.selectionEnd);
+  const ins="[["+id+"|"+(sel||a.names[0].t)+"]]";
+  const s=ta.selectionStart,en=ta.selectionEnd;const v=ta.value.slice(0,s)+ins+ta.value.slice(en);
+  S.edit.draft=v;S.pick=null;renderMain();const t2=$("#ed");t2.value=v;t2.focus();t2.setSelectionRange(s+ins.length,s+ins.length);
+}
+function cancelEdit(){
+  const E=S.edit;S.edit=null;S.pick=null;
+  if(E&&E.kind==="q"){const a0=S.arts.get(E.a);const f=a0&&findItem(a0,E.q);if(f&&!f.item.table&&!String(f.item.t||"").trim()){const a=clone(a0);const g=findItem(a,E.q);if(g.kind==="lead") a.lead=null;else g.sec.items.splice(g.idx,1);saveArt(a,null,{noUndo:true});return}}
+  if(E&&E.kind==="ev"){const ev=S.tl.events.find(x=>x.id===E.q);if(ev&&!String(ev.t||"").trim()){S.tl.events=S.tl.events.filter(x=>x!==ev);saveTl(null);return}}
+  renderMain();applyPending();
+}
+function applyPending(){
+  if(!S._pending||S.edit||S.busy||(document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.gl)||(S.glHold&&Date.now()-S.glHold<600)) return;
+  const {m,tl}=S._pending;S._pending=null;
+  S.arts=new Map([...m].map(([k,v])=>[k,clone(v)]));S.tl=tl?clone(tl):{events:[]};render();
+}
+function commitEdit(){
+  const E=S.edit;if(!E) return;
+  const val=($("#ed")?.value??"").trim();
+  if(E.kind==="ev"){
+    const prev=clone(S.tl);const ev=S.tl.events.find(x=>x.id===E.q);
+    const num=v=>v===""?null:Math.round(Number(v));
+    ev.zf=num($("#ev-zf").value);ev.zt=num($("#ev-zt").value);ev.day=$("#ev-day").value.trim();ev.era=$("#ev-era").value.trim()||"Без эпохи";ev.ap=$("#ev-ap").checked;ev.t=val;
+    if(ev.zf!=null){S.tl.events=S.tl.events.filter(x=>x!==ev);let k=S.tl.events.length;for(let j=S.tl.events.length-1;j>=0;j--){const z=S.tl.events[j].zf;if(z!=null&&z<=ev.zf){k=j+1;break}if(j===0)k=0}S.tl.events.splice(k,0,ev)}
+    S.edit=null;S.pick=null;saveTl(prev);return;
+  }
+  const a0=S.arts.get(E.a);const prev=clone(a0);const a=clone(a0);
+  if(E.kind==="q"){const f=findItem(a,E.q);if(!val){ if(f.kind==="lead") a.lead=null; else f.sec.items.splice(f.idx,1)} else f.item.t=val}
+  else if(E.kind==="name"){if(!val){S.edit=null;renderMain();return}a.names.find(n=>n.id===E.q).t=val}
+  else if(E.kind==="title"){a.names[0].t=val||a.names[0].t}
+  else if(E.kind==="sec"){a.sections.find(s=>s.id===E.q).h=val||"Без названия"}
+  else if(E.kind==="cap"){a.images.find(i=>i.id===E.q).cap=val}
+  else if(E.kind==="cat"){a.cat=$("#ed").value;a.group=($("#ed2")?.value||"").trim()}
+  S.edit=null;S.pick=null;saveArt(a,prev,{noUndo:true});
+}
+function createArt(){
+  const t=$("#na-t").value.trim();if(!t){$("#na-t").focus();return}
+  const id=(translit(t).replace(/[^a-z0-9]+/g,"").slice(0,24)||"art")+uid().slice(0,4);
+  const cat=$("#na-c").value,group=$("#na-g").value.trim();
+  const order=Math.max(0,...[...S.arts.values()].filter(a=>a.cat===cat).map(a=>a.order||0))+1;
+  const a={id,cat,group,order,names:[{id:id+"-n0",t,o:false}],lead:null,sections:[{id:id+"-s0",h:"Основное",items:[]}],images:[]};
+  S.newArt=false;saveArt(a,null);location.hash="#a-"+id;
+}
+function translit(s){const m={а:"a",б:"b",в:"v",г:"g",д:"d",е:"e",ё:"e",ж:"zh",з:"z",и:"i",й:"y",к:"k",л:"l",м:"m",н:"n",о:"o",п:"p",р:"r",с:"s",т:"t",у:"u",ф:"f",х:"h",ц:"c",ч:"ch",ш:"sh",щ:"sch",ы:"y",э:"e",ю:"yu",я:"ya"};return s.toLowerCase().split("").map(c=>m[c]??c).join("")}
+function doUndo(){
+  const U=S.undo;if(!U) return;S.undo=null;$("#toast").hidden=true;
+  if(U.type==="tl"){S.tl=U.prev;saveTl(null)}
+  else saveArt(U.prev,null,{noUndo:true});
+}
+document.addEventListener("keydown",e=>{
+  if(e.target.id==="ed"||e.target.closest?.(".editor")){
+    if(e.key==="Escape"){cancelEdit()}
+    else if(e.key==="Enter"&&(e.ctrlKey||e.metaKey||e.target.tagName==="INPUT"&&e.target.id==="ed")){e.preventDefault();commitEdit()}
+  }
+  if(e.key==="Escape"){$("#lightbox").hidden=true;$("#menu").hidden=true}
+});
+document.addEventListener("input",e=>{
+  if(e.target.id==="pickq"){S.pick=e.target.value;const ed=$("#ed");const v=ed?.value;const pos=e.target.selectionStart;renderMain();if(v!=null) $("#ed").value=v;const p=$("#pickq");p.focus();p.setSelectionRange(pos,pos)}
+  if(e.target.dataset.tf){const k=e.target.dataset.tf;S.tf[k]=e.target.value;const pos=e.target.selectionStart;renderMain();const el=document.getElementById("tf-"+k);if(el){el.focus();el.setSelectionRange(pos,pos)}}
+});
+let qT;
+$("#q").addEventListener("input",e=>{clearTimeout(qT);qT=setTimeout(()=>{S.q=e.target.value;S.newArt=false;renderMain()},120)});
+$("#m-gm").addEventListener("click",()=>{S.preview=false;S.edit=null;render()});
+$("#m-pl").addEventListener("click",()=>{S.preview=true;S.edit=null;render()});
+$("#burger").addEventListener("click",()=>$("#side").classList.toggle("open"));
+function closeSide(){$("#side").classList.remove("open")}
+$("#menubtn").addEventListener("click",()=>{
+  const m=$("#menu");
+  if(!m.hidden){m.hidden=true;return}
+  let h="";
+  if(S.mode==="gm") h+='<button data-gh="settings">Настройки синхронизации</button><div class="note">Токен GitHub для этого браузера. Версия для игроков собирается при каждой синхронизации.</div>';
+  if(S.downloads){
+    h+='<button data-act="exportpl">Скачать версию для игроков (HTML)</button>';
+    if(S.mode==="gm") h+='<button data-act="backup">Скачать резервную копию (JSON)</button>';
+  }
+  if(S.mode==="gm") h+='<button data-act="import">Импортировать дополнения (JSON)</button><div class="note">Файл дополнений от Claude: новые статьи и разделы добавляются скрытыми, ваши правки не перезаписываются.</div>';
+  if(!h) h='<div class="note">Дополнительных действий нет.</div>';
+  m.innerHTML=h;m.hidden=false;
+});
+$("#impfile").addEventListener("change",async e=>{
+  const f=e.target.files[0];if(!f||S.mode!=="gm") return;
+  let ops;try{ops=JSON.parse(await f.text());if(!Array.isArray(ops)) ops=ops.ops;if(!Array.isArray(ops)) throw 0}catch(err){toast("Это не файл дополнений.");return}
+  await importOps(ops);
+});
+async function importOps(ops){
+  let added=0,ext=0,skipped=0,ev=0,fixed=0;const touched=new Set();let tlTouched=false;
+  const walk=(v,f)=>{if(typeof v==="string") return f(v);if(Array.isArray(v)) return v.map(x=>walk(x,f));
+    if(v&&typeof v==="object"){const o={};for(const k in v) o[k]=(k==="id"||k==="asset")?v[k]:walk(v[k],f);return o}return v};
+  const findIt=(a,qid)=>{if(a.lead&&a.lead.id===qid) return a.lead;for(const s of a.sections){const i=s.items.find(i=>i.id===qid);if(i) return i}return null};
+  await queue(async()=>{
+    for(const o of ops){
+      if(o.op==="rename"){
+        const re=new RegExp(o.re,"gu");const f=t=>t.replace(re,o.to);
+        for(const [id,a] of S.arts){const b=walk(a,f);if(JSON.stringify(b)!==JSON.stringify(a)){b.updated=Date.now();S.arts.set(id,b);touched.add(id);fixed++;await S.db.collection("gm").doc(id).set(b)}}
+        const t2=walk(S.tl,f);if(JSON.stringify(t2)!==JSON.stringify(S.tl)){S.tl=t2;tlTouched=true;await S.db.collection("gm").doc("_timeline").set(S.tl)}
+        continue;
+      }
+      if(o.op==="field"||o.op==="open"){
+        const id=String(o.path).replace(/^gm\//,"");const cur=S.arts.get(id);if(!cur){skipped++;continue}
+        const a=clone(cur);let ch=false;
+        if(o.op==="field"){for(const k in o.set) if(JSON.stringify(a[k])!==JSON.stringify(o.set[k])){a[k]=o.set[k];ch=true}}
+        else{const ex=new Set(o.except||[]);const now=Date.now();
+          const op=x=>{if(x&&!x.o&&!ex.has(x.id)){x.o=true;x.ot=now;ch=true}};
+          (a.names||[]).forEach(op);op(a.lead);a.sections.forEach(s=>s.items.forEach(op));if(o.images)(a.images||[]).forEach(op)}
+        if(!ch) continue;a.updated=Date.now();S.arts.set(id,a);touched.add(id);fixed++;
+        await S.db.collection("gm").doc(id).set(a);continue;
+      }
+      if(o.op==="image"){
+        const id=String(o.path).replace(/^gm\//,"");const cur=S.arts.get(id);if(!cur||!S.assets){skipped++;continue}
+        if((cur.images||[]).some(x=>x.id===o.id)) continue;
+        try{const bl=await (await fetch(o.data)).blob();const f=new File([bl],o.name||"image.jpg",{type:bl.type});
+          const r=await S.assets.upload(f);const a=clone(S.arts.get(id));a.images=a.images||[];
+          a.images.push({id:o.id,asset:r.id,cap:o.cap||"",o:!!o.o});a.updated=Date.now();S.arts.set(id,a);touched.add(id);fixed++;
+          await S.db.collection("gm").doc(id).set(a);}catch(err){console.error(err);skipped++}
+        continue;
+      }
+      if(o.op==="item"||o.op==="additem"){
+        const id=String(o.path).replace(/^gm\//,"");const cur=S.arts.get(id);if(!cur){skipped++;continue}
+        const a=clone(cur);
+        if(o.op==="item"){const it=findIt(a,o.id);if(!it||it.t===o.t) continue;it.t=o.t}
+        else{if(findIt(a,o.item.id)) continue;const sec=a.sections.find(x=>x.id===o.sec)||a.sections[a.sections.length-1];if(!sec) continue;sec.items.push(clone(o.item))}
+        a.updated=Date.now();S.arts.set(id,a);touched.add(id);fixed++;await S.db.collection("gm").doc(id).set(a);continue;
+      }
+      if(o.op==="event"){
+        const e=(S.tl.events||[]).find(x=>x.id===o.id);if(!e) continue;Object.assign(e,o.set);tlTouched=true;fixed++;
+        await S.db.collection("gm").doc("_timeline").set(S.tl);continue;
+      }
+      const id=String(o.path||"").replace(/^gm\//,"");if(!id||!o.data) continue;
+      if(id==="_timeline"){
+        const tl=clone(S.tl);const before=(tl.events||[]).length;
+        xnorm(Object.assign(tl,{xevents:o.data.xevents||[]}));
+        ev+=tl.events.length-before;S.tl=tl;
+        await S.db.collection("gm").doc("_timeline").set(S.tl);continue;
+      }
+      const cur=S.arts.get(id);
+      if(o.op==="set"){
+        if(cur){skipped++;continue}
+        const a=clone(o.data);a.id=id;a.updated=Date.now();S.arts.set(id,a);added++;
+        await S.db.collection("gm").doc(id).set(a);
+      } else if(o.data.xsections){
+        if(!cur){skipped++;continue}
+        const a=clone(cur);const n=a.sections.length;xnorm(Object.assign(a,{xsections:o.data.xsections}));
+        if(a.sections.length===n){skipped++;continue}
+        a.updated=Date.now();S.arts.set(id,a);ext++;
+        await S.db.collection("gm").doc(id).set(a);
+      }
+    }
+    if(added||ext||touched.size||tlTouched||ev){
+      const vis=visSet(S.arts);const existing=await S.db.collection("pub").get();
+      for(const a of S.arts.values()){const p=pubOf(a,vis,S.arts);if(p) await S.db.collection("pub").doc(a.id).set(p)}
+      for(const d of existing.docs) if(d.id!=="_timeline"&&!vis.has(d.id)) await S.db.collection("pub").doc(d.id).delete();
+      await S.db.collection("pub").doc("_timeline").set(pubTimeline(S.tl,vis,S.arts));
+    }
+  });
+  render();
+  toast("Импорт: новых статей — "+added+", дополнено — "+ext+", событий — "+ev+", исправлений — "+fixed+(skipped?", пропущено (уже есть) — "+skipped:"")+".");
+}
+$("#file").addEventListener("change",async e=>{
+  const f=e.target.files[0];const aid=S.uploadFor;if(!f||!aid||!S.assets) return;
+  toast("Загружаю «"+f.name+"»…");
+  try{
+    const r=await S.assets.upload(f);
+    const a0=S.arts.get(aid);const prev=clone(a0);const a=clone(a0);
+    a.images=a.images||[];a.images.push({id:a.id+"-i"+uid(),asset:r.id,cap:"",o:false});
+    saveArt(a,prev,{noUndo:true});toast("Иллюстрация добавлена — она скрыта от игроков.");
+  }catch(err){
+    const c=err&&err.code;
+    toast(c==="too_large"?"Файл больше 20 МБ — сожмите его и попробуйте снова.":c==="unsupported_type"?"Этот формат не подходит: нужен PNG, JPEG, WebP или GIF.":c==="quota_or_state"?"Место для файлов закончилось.":"Не удалось загрузить файл. Попробуйте ещё раз.");
+  }
+});
+
+/* ---------- toast ---------- */
+let tT;
+function toast(msg){const t=$("#toast");t.innerHTML="<span>"+esc(msg)+"</span>";t.hidden=false;clearTimeout(tT);tT=setTimeout(()=>t.hidden=true,3800)}
+function toastUndo(msg){const t=$("#toast");t.innerHTML="<span>"+esc(msg)+'</span><button data-act="undo">Вернуть</button>';t.hidden=false;clearTimeout(tT);tT=setTimeout(()=>t.hidden=true,7000)}
+
+/* ---------- быстрый NPC и генератор имён ---------- */
+const NAMES_ID="names_pool";
+const RACES=["люди","эльфы","дроу","дварфы","орки","полуорки","полурослики","гномы","тифлинги","табакси","голиафы","драконорождённые","аасимары","шифтеры","кенку","гоблины","смешанное","другое"];
+const RACE1={"люди":"человек","эльфы":"эльф","дроу":"дроу","дварфы":"дварф","орки":"орк","полуорки":"полуорк","полурослики":"полурослик","гномы":"гном","тифлинги":"тифлинг","табакси":"табакси","голиафы":"голиаф","драконорождённые":"драконорождённый","аасимары":"аасимар","шифтеры":"шифтер","кенку":"кенку","гоблины":"гоблин","смешанное":"смешанного происхождения","другое":"другое"};
+const NAMES_SEED={
+ "люди":{f:"Лиора, Зелина, Розвен, Каланта, Веспера, Суннива, Петронелла, Мортисса, Прудентия, Эводосия, Изотта, Сильвестра, Велания, Тессара, Камелия, Сидни, Агнес, Авелия, Тирра, Хамия, Альба, Ксолани, Пенелопа, Велати",m:"Клемент, Тристрам, Корделл, Перегрин, Кенелм, Вильмот, Эммот, Авис, Эльстан, Кардан, Аластор, Освин, Эрнвальд, Каспар, Синай, Хасейд, Эммрих, Мариус, Сталдар, Лотар, Альмус, Эктор, Рейнальд, Маркус, Диомед, Юэн",s:"Барнаби, Винкрин, Чидиок, Пойнингс, Хэйли, Мармадук, Гоух, Кинборо, Парнэлл, Акестес, Мерлионн, Элдкарн, Эстермонт, Спацонэ, Септер, Соловина, Прадд, Марут, Силкост, Кассио, Штумм, Перенни, Фюрст, Оласто, Сардо, Глин"},
+ "эльфы":{f:"Лиора, Каланта, Равинэль, Сильвестра, Киамет, Ниферия, Деира, Камелия, Эйлин, Кессала, Серелия, Аэлина",m:"Ондин, Калфэрон, Шендар, Тамион, Колубран, Аэлион, Эйвар, Ланнэр, Таэрин, Сэлдрис",s:"Талорин, Аварит, Орравин, Искариэн, Селварис, Нерморис, Галанодель, Атеран, Каэрон, Марелл, Неверэмбер"},
+ "дроу":{f:"Ниферия, Сэвира, Дускара, Лиет, Тальбрина, Ашемми, Шани, Калиира, Ульзара, Элисанд, Фиа, Амара, Ракиша, Зунэ",m:"Вирексен, Эшравин, Скимнок, Калис, Сазар, Ланн, Корбин, Риннил, Ксаэрет, Илваш",s:"Велис-Таэр, Миззрим, Кинофин, Фререт, Кестан, Диссан, Бэнре, Слиан"},
+ "дварфы":{f:"Зелина, Розвен, Изотта, Тегвин, Альва, Велгрун, Гэриниша, Саульфа, Варна, Тисса, Хельда",m:"Торбальд, Торви, Димар, Дуннар, Родар, Томон, Брандур, Гаррик, Хорст",s:"Горнеканн, Кади, Друскан, Фольраг, Роксикер, Дантелон, Росторт, Спинолом, Громоступ"},
+ "орки":{f:"Феног, Хайза, Искра, Думула, Урша, Гаэла, Бахра, Шагра",m:"Морахан, Мормеш, Морлэш, Локтар, Шорго, Горхан, Барна, Груллок, Ургаш, Краг",s:"Урзул, Логар, Шуграз, Окзу-Гра, Шунар, Гаррош"},
+ "полуорки":{f:"Хайза, Искра, Зелина, Урсула, Варша, Мира",m:"Морахан, Локтар, Горхан, Корг, Дрейван, Ургаш",s:"Урзул, Логар, Шуграз, Валодар"},
+ "полурослики":{f:"Агнес, Нитта, Мейв, Зелина, Розвен, Серафина, Лилли, Кора",m:"Арр, Мило, Перрин, Теобальд, Корвин, Финн",s:"Амир, Иводёр, Белоног, Бурозуб, Тёплоручкин, Медоцвет"},
+ "гномы":{f:"Тесса, Садди, Гэриниша, Нисса, Фелла, Бимпи",m:"Винфред, Лунд, Марик, Дардок, Винберхт, Фибблстоп, Зук",s:"Талбот, Гипелл, Росторт, Пыложар, Шестерёнкин"},
+ "тифлинги":{f:"Аурелия, Песня, Истина, Рииша, Дро-Дара, Креасса, Отрада, Милость, Тайна, Зарая, Мелеха",m:"Довод, Обет, Пепел, Рок, Аркадос, Хелькар, Зарай, Мордай, Скорбь",s:"Зьянур, Ракшан"},
+ "табакси":{f:"Раштель, Хреща, Мецтли, Иштак, Тиакуи, Ксочи",m:"Ахрещ, Ицтли, Тлакуи, Кошах, Йолот",s:""},
+ "голиафы":{f:"Анук, Рагима, Кигу, Кетра, Ваунея, Илику",m:"Рагнат, Аукан, Гаэал, Кеотхи, Вимак",s:"Варугета, Тамаканипа, Костолом"},
+ "драконорождённые":{f:"Нииза, Эда, Акра, Сора, Харанн, Бирен",m:"Балтасар, Арджан, Донаар, Кринн, Медраш, Торинн",s:"Яржерит, Громоступ, Кимбатуул, Дельмирев"},
+ "аасимары":{f:"Элиар, Лиора, Велания, Серафина, Исола",m:"Салар, Каэль, Освин, Аэрон, Тамир",s:"аль Амаиш, Сардо, Гоух"},
+ "шифтеры":{f:"Табифа, Шира, Ривка, Тамси",m:"Клык, Таргос, Вуд, Ревн",s:"Назуккир, Серолап"},
+ "кенку":{f:"Стрекоза, Капель, Синица, Шорох",m:"Скрип, Звон, Щелчок, Перестук, Скрежет",s:""},
+ "гоблины":{f:"Гузеки, Нэкки, Зиба, Скрипка",m:"Кагмар, Бирюк, Грутт, Сникс, Зокк",s:""},
+ "смешанное":{f:"Дамия, Клякса, Ольлук, Ринни, Сидни",m:"Бруг, Аззи, Ревион, Гарпун",s:"Валодар, Подум, Декариос"},
+ "другое":{f:"Мара, Лира, Кина",m:"Вильгельм, Титу, Бритва",s:""}
+};
+const GEN={f:"Женские",m:"Мужские",s:"Фамилии"};
+function namesArticle(){return S.arts.get(NAMES_ID)}
+function ensureNamesArticle(){
+  if(namesArticle()) return;
+  const a={id:NAMES_ID,cat:"meta",group:"",order:90,names:[{id:NAMES_ID+"-n0",t:"Имена",o:false}],
+    lead:{id:NAMES_ID+"-lead",t:"Списки имён для генератора в окне «+ NPC». Каждая строка — имена через запятую; правьте свободно: генератор учится на этих списках.",o:false},
+    sections:RACES.map((r,k)=>({id:NAMES_ID+"-s"+k,h:r[0].toUpperCase()+r.slice(1),items:["f","m","s"].map(g=>({id:NAMES_ID+"-"+k+g,t:"**"+GEN[g]+":** "+((NAMES_SEED[r]||{})[g]||""),o:false}))})),images:[]};
+  saveArt(a,null,{noUndo:true});
+}
+function poolFor(race){
+  const a=namesArticle();const out={f:[],m:[],s:[]};if(!a) return out;
+  const sec=a.sections.find(s=>s.h.trim().toLowerCase()===race);if(!sec) return out;
+  for(const i of sec.items){
+    if(i.table) continue;const t=String(i.t||"").replace(/\*\*/g,"");const k=t.indexOf(":");if(k<0) continue;
+    const head=t.slice(0,k).toLowerCase();const g=/жен/.test(head)?"f":/муж/.test(head)?"m":/фамил/.test(head)?"s":null;if(!g) continue;
+    out[g].push(...t.slice(k+1).split(",").map(x=>x.trim()).filter(Boolean));
+  }
+  return out;
+}
+function markov(list,n,avoid){
+  const words=[...new Set(list.map(w=>w.toLowerCase()))];if(!words.length) return [];
+  const O=2,T={};
+  for(const w of words){const s="^".repeat(O)+w+"$";for(let i=0;i+O<s.length;i++){const k=s.slice(i,i+O);(T[k]=T[k]||[]).push(s[i+O])}}
+  const lens=words.map(w=>w.length);const mn=Math.max(3,Math.min(...lens)-1),mx=Math.max(...lens)+2;
+  const seen=new Set([...words,...avoid]);const res=[];
+  for(let tries=0;tries<400&&res.length<n;tries++){
+    let k="^".repeat(O),w="";
+    while(w.length<mx+1){const nx=T[k];if(!nx) break;const c=nx[Math.floor(Math.random()*nx.length)];if(c==="$") break;w+=c;k=(k+c).slice(-O)}
+    if(w.length<mn||w.length>mx||seen.has(w)) continue;
+    if(/(.)\1\1/.test(w)||/[ьъ][ьъ]/.test(w)||/^[ьъы-]/.test(w)||/-$/.test(w)) continue;
+    seen.add(w);res.push(w.split("-").map(p=>p?p[0].toUpperCase()+p.slice(1):p).join("-"));
+  }
+  return res;
+}
+function genNames(race,gender,withSurname,n=5){
+  const P=poolFor(race);
+  const firsts=gender==="any"?[...P.f,...P.m]:(P[gender].length>=6?P[gender]:[...P[gender],...P[gender==="f"?"m":"f"]]);
+  const pool=firsts.length?firsts:[...poolFor("люди").f,...poolFor("люди").m];
+  const avoid=[...S.arts.values()].flatMap(a=>a.names.map(x=>x.t.toLowerCase()));
+  let fn=markov(pool,n,avoid);
+  while(fn.length<n&&pool.length) fn.push(pool[Math.floor(Math.random()*pool.length)]);
+  const sn=withSurname&&P.s.length?[...markov(P.s,n,[]),...P.s.slice().sort(()=>Math.random()-.5)]:[];
+  return fn.map((f,i)=>({first:f,full:sn.length?f+" "+(Math.random()<.6&&sn[i]?sn[i]:sn[sn.length-1-i]||sn[0]):f}));
+}
+function addToPool(race,gender,name){
+  ensureNamesArticle();const a0=namesArticle();if(!a0) return;
+  const a=clone(a0);let sec=a.sections.find(s=>s.h.trim().toLowerCase()===race);
+  if(!sec){sec={id:NAMES_ID+"-s"+uid(),h:race[0].toUpperCase()+race.slice(1),items:[]};a.sections.push(sec)}
+  const g=gender==="any"?"m":gender;
+  let it=sec.items.find(i=>!i.table&&new RegExp(GEN[g],"i").test(String(i.t||"")));
+  if(!it){it={id:NAMES_ID+"-"+uid(),t:"**"+GEN[g]+":** ",o:false};sec.items.push(it)}
+  const cur=String(it.t).replace(/^\*\*[^*]+\*\*\s*/,"").split(",").map(x=>x.trim()).filter(Boolean);
+  if(cur.some(x=>x.toLowerCase()===name.toLowerCase())) return;
+  cur.push(name);it.t="**"+GEN[g]+":** "+cur.join(", ");
+  saveArt(a,null,{noUndo:true});toast("«"+name+"» добавлено в список имён.");
+}
+const Q={open:false,type:"people",race:"люди",gender:"f",surname:true,variants:[],links:[],linkq:""};
+function openQuick(){
+  if(S.mode!=="gm") return;ensureNamesArticle();
+  Q.open=true;Q.variants=[];Q.links=[];Q.linkq="";
+  try{const p=JSON.parse(localStorage.getItem("evia-qadd")||"{}");if(p.race) Q.race=p.race;if(p.gender) Q.gender=p.gender}catch(e){}
+  renderQuick();setTimeout(()=>$("#qa-name")?.focus(),30);
+}
+function closeQuick(){Q.open=false;$("#qadd-modal").hidden=true}
+function renderQuick(keep){
+  const m=$("#qadd-modal");if(!Q.open){m.hidden=true;return}
+  const v=keep||{};
+  const isNpc=Q.type==="people";
+  const sug=Q.linkq.trim()?sortArts([...S.arts.values()].filter(a=>a.id!==NAMES_ID&&!Q.links.includes(a.id)&&a.names.some(n=>n.t.toLowerCase().includes(Q.linkq.trim().toLowerCase())))).slice(0,8):[];
+  m.innerHTML='<div class="qa-box" role="dialog" aria-modal="true" aria-labelledby="qa-h"><div class="qa-head"><h2 id="qa-h">Быстрая запись</h2><button class="tool" data-qa="close" aria-label="Закрыть">'+I.x+'</button></div>'+
+   '<div class="qa-tabs">'+[["people","NPC"],["places","Место"],["factions","Фракция"]].map(([c,n])=>'<button class="fchip" data-qa="type" data-v="'+c+'" aria-pressed="'+(Q.type===c)+'">'+n+"</button>").join("")+"</div>"+
+   '<label class="qa-l">'+(isNpc?"Имя":"Название")+'<span class="qa-row"><input id="qa-name" autocomplete="off" value="'+esc(v.name||"")+'" placeholder="'+(isNpc?"Имя или 🎲":"Название")+'">'+(isNpc?'<button class="btn" data-qa="gen" title="Сгенерировать имя">🎲</button>':"")+"</span></label>"+
+   (isNpc?'<div class="qa-row qa-opts"><label class="qa-l">Раса<select id="qa-race">'+RACES.map(r=>'<option'+(r===Q.race?" selected":"")+">"+r+"</option>").join("")+'</select></label><label class="qa-l">Пол<select id="qa-gender"><option value="f"'+(Q.gender==="f"?" selected":"")+'>женский</option><option value="m"'+(Q.gender==="m"?" selected":"")+'>мужской</option><option value="any"'+(Q.gender==="any"?" selected":"")+'>любой</option></select></label><label class="qa-chk"><input type="checkbox" id="qa-sur"'+(Q.surname?" checked":"")+"> с фамилией</label></div>":"")+
+   (isNpc&&Q.variants.length?'<div class="qa-vars">'+Q.variants.map((x,k)=>'<span class="qa-var"><button data-qa="pick" data-k="'+k+'">'+esc(x.full)+'</button><button class="qa-star" data-qa="star" data-k="'+k+'" title="Добавить имя в список «'+esc(Q.race)+'»" aria-label="В список имён">☆</button></span>').join("")+'<button class="textbtn" data-qa="gen">ещё</button></div>':"")+
+   '<label class="qa-l">Кто это<input id="qa-who" autocomplete="off" value="'+esc(v.who||"")+'" placeholder="'+(isNpc?"трактирщица в Синепутье, должна Гриве":"коротко, одной строкой")+'"></label>'+
+   (isNpc?'<label class="qa-l">Где встретили<input id="qa-where" autocomplete="off" value="'+esc(v.where||"")+'" placeholder="необязательно"></label>':"")+
+   '<div class="qa-l">Связан с<div class="qa-links">'+Q.links.map(id=>{const a=S.arts.get(id);return a?'<span class="chip plain">'+esc(a.names[0].t)+' <button class="tool" style="width:18px;height:18px" data-qa="unlink" data-id="'+id+'" aria-label="Убрать">'+I.x+"</button></span>":""}).join("")+
+   '<input id="qa-linkq" autocomplete="off" value="'+esc(Q.linkq)+'" placeholder="начните вводить название статьи"></div>'+(sug.length?'<div class="picker">'+sug.map(a=>'<button data-qa="link" data-id="'+a.id+'">'+esc(a.names[0].t)+' <span class="hint">'+esc(CATN[a.cat]||"")+"</span></button>").join("")+"</div>":"")+"</div>"+
+   '<div class="qa-foot"><button class="btn pri" data-qa="save">Сохранить</button><button class="btn" data-qa="close">Отмена</button><span class="hint">Запись создаётся скрытой от игроков'+(isNpc?", в группе «Новые»":"")+". Enter — сохранить.</span></div></div>";
+  m.hidden=false;
+}
+function qaVals(){return {name:$("#qa-name")?.value||"",who:$("#qa-who")?.value||"",where:$("#qa-where")?.value||""}}
+function qaReadOpts(){
+  const r=$("#qa-race"),g=$("#qa-gender"),s=$("#qa-sur");
+  if(r) Q.race=r.value;if(g) Q.gender=g.value;if(s) Q.surname=s.checked;
+  try{localStorage.setItem("evia-qadd",JSON.stringify({race:Q.race,gender:Q.gender}))}catch(e){}
+}
+function saveQuick(){
+  const v=qaVals();const name=v.name.trim();
+  if(!name){$("#qa-name").focus();toast("Нужно имя — впишите или нажмите 🎲.");return}
+  qaReadOpts();
+  const cat=Q.type;const id=(translit(name).replace(/[^a-z0-9]+/g,"").slice(0,24)||"art")+uid().slice(0,4);
+  const order=Math.max(0,...[...S.arts.values()].filter(a=>a.cat===cat).map(a=>a.order||0))+1;
+  const items=[];
+  if(cat==="people") items.push("Раса: "+(RACE1[Q.race]||Q.race)+(Q.gender==="f"?" · женщина":Q.gender==="m"?" · мужчина":""));
+  if(v.where.trim()) items.push("Где встретили: "+v.where.trim());
+  if(Q.links.length) items.push("Связан с: "+Q.links.map(l=>{const a=S.arts.get(l);return a?"[["+l+"|"+a.names[0].t+"]]":""}).filter(Boolean).join(", "));
+  items.push("Записано на игре "+new Date().toLocaleDateString("ru-RU",{day:"numeric",month:"long",year:"numeric"}).replace(/\s*г\.$/,"")+" г.");
+  const a={id,cat,group:cat==="people"?"Новые":"",order,names:[{id:id+"-n0",t:name,o:false}],
+    lead:v.who.trim()?{id:id+"-lead",t:v.who.trim(),o:false}:null,
+    sections:[{id:id+"-s0",h:"Факты",items:items.map((t,k)=>({id:id+"-q"+k,t,o:false}))}],images:[],updated:Date.now()};
+  closeQuick();saveArt(a,null,{noUndo:true});
+  const t=$("#toast");t.innerHTML='<span>Записано: '+esc(name)+'</span><a href="#a-'+id.replace(/_/g,"-")+'" style="color:var(--verd-soft)">открыть</a>';t.hidden=false;clearTimeout(tT);tT=setTimeout(()=>t.hidden=true,6000);
+}
+document.addEventListener("click",e=>{
+  if(e.target.id==="qadd-modal"){closeQuick();return}
+  const b=e.target.closest("[data-qa]");if(!b) return;
+  const act=b.dataset.qa,keep=qaVals();
+  switch(act){
+    case "close": closeQuick();break;
+    case "type": Q.type=b.dataset.v;Q.variants=[];renderQuick(keep);break;
+    case "gen": qaReadOpts();Q.variants=genNames(Q.race,Q.gender,Q.surname);if(!Q.variants.length) toast("В списке «"+Q.race+"» пока нет имён — добавьте их на странице «Имена».");renderQuick(keep);break;
+    case "pick": keep.name=Q.variants[+b.dataset.k].full;renderQuick(keep);$("#qa-who")?.focus();break;
+    case "star": qaReadOpts();addToPool(Q.race,Q.gender,Q.variants[+b.dataset.k].first);b.textContent="★";break;
+    case "link": Q.links.push(b.dataset.id);Q.linkq="";renderQuick(keep);$("#qa-linkq")?.focus();break;
+    case "unlink": Q.links=Q.links.filter(x=>x!==b.dataset.id);renderQuick(keep);break;
+    case "save": saveQuick();break;
+  }
+});
+document.addEventListener("input",e=>{
+  if(e.target.id==="qa-linkq"){Q.linkq=e.target.value;const keep=qaVals();const pos=e.target.selectionStart;renderQuick(keep);const el=$("#qa-linkq");el.focus();el.setSelectionRange(pos,pos)}
+});
+document.addEventListener("change",e=>{if(["qa-race","qa-gender","qa-sur"].includes(e.target.id)){qaReadOpts();if(Q.variants.length){Q.variants=genNames(Q.race,Q.gender,Q.surname);renderQuick(qaVals())}}});
+document.addEventListener("keydown",e=>{
+  if(Q.open){
+    if(e.key==="Escape"){e.preventDefault();closeQuick();return}
+    if(e.key==="Enter"&&e.target.id!=="qa-linkq"&&e.target.tagName==="INPUT"){e.preventDefault();saveQuick();return}
+    if(e.key==="Enter"&&e.target.id==="qa-linkq"){e.preventDefault();const f=$("#qadd-modal .picker button");if(f) f.click();return}
+    return;
+  }
+  const tag=(e.target.tagName||"").toUpperCase();
+  if(S.mode==="gm"&&!S.preview&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&(e.key==="n"||e.key==="N"||e.key==="т"||e.key==="Т")&&tag!=="INPUT"&&tag!=="TEXTAREA"&&tag!=="SELECT"&&!S.edit){e.preventDefault();openQuick()}
+});
+$("#qadd").addEventListener("click",openQuick);
+
+
+/* ---------- глоссарий ---------- */
+const GLOSS_ID="geo_names";
+const GLOSS_SEED={"id":"geo_names","cat":"meta","group":"","order":5,"names":[{"id":"geo_names-n0","t":"Глоссарий: география","o":false}],"lead":{"id":"geo_names-lead","t":"Названия мест Врат Балдура и Побережья Мечей — оригинал и наш перевод.","o":false},"sections":[{"id":"geo_names-s0","h":"Как пользоваться","items":[{"id":"geo_names-q0_0","t":"Здесь копятся географические названия Врат Балдура, Побережья Мечей и окрестностей — для переводов. Формат строки: **оригинал** — перевод. «?» — перевода ещё нет; «(предп.)» — предположение, какое место соответствует нашему названию.","o":false}]},{"id":"geo_names-s1","h":"Врата Балдура: части города","items":[{"id":"geo_names-q1_0","t":"**Baldur’s Gate** — Врата Балдура","o":false},{"id":"geo_names-q1_1","t":"**Upper City** — Верхний город?","o":false},{"id":"geo_names-q1_2","t":"**Lower City** — Нижний город","o":false},{"id":"geo_names-q1_3","t":"**Outer City** — Внешний город?","o":false}]},{"id":"geo_names-s2","h":"Верхний город","items":[{"id":"geo_names-q2_0","t":"**Citadel Streets** — Караульный проезд","o":false},{"id":"geo_names-q2_1","t":"**Manorborn** — Благородный квартал","o":false},{"id":"geo_names-q2_2","t":"**Temples** — ?","o":false},{"id":"geo_names-q2_3","t":"**High Hall** — ?","o":false},{"id":"geo_names-q2_4","t":"**The Wide** — ?","o":false},{"id":"geo_names-q2_5","t":"**Lady’s Hall** (храм Тиморы) — ?","o":false},{"id":"geo_names-q2_6","t":"**High House of Wonders** (храм Гонда) — ?","o":false}]},{"id":"geo_names-s3","h":"Нижний город","items":[{"id":"geo_names-q3_0","t":"**Bloomridge** — Цветущий холм","o":false},{"id":"geo_names-q3_1","t":"**Brampton** — Брамптон","o":false},{"id":"geo_names-q3_2","t":"**Eastway** — Синепутье","o":false},{"id":"geo_names-q3_3","t":"**Heapside** — Пригорье","o":false},{"id":"geo_names-q3_4","t":"**Seatower** — ?","o":false},{"id":"geo_names-q3_5","t":"**Seatower of Balduran** — Морская башня","o":false},{"id":"geo_names-q3_6","t":"**The Steeps** — Ступени","o":false},{"id":"geo_names-q3_7","t":"**Gray Harbor** (порт) — ?","o":false},{"id":"geo_names-q3_8","t":"**Counting House** — ?","o":false},{"id":"geo_names-q3_9","t":"**Water Queen’s House** (храм Амберли) — ?","o":false},{"id":"geo_names-q3_10","t":"**Elfsong Tavern** — ?","o":false},{"id":"geo_names-q3_11","t":"**Blushing Mermaid** — ?","o":false},{"id":"geo_names-q3_12","t":"**Undercellar** — ?","o":false}]},{"id":"geo_names-s4","h":"Внешний город","items":[{"id":"geo_names-q4_0","t":"**Blackgate** — ?","o":false},{"id":"geo_names-q4_1","t":"**Little Calimshan** — Малый Калимшан","o":false},{"id":"geo_names-q4_2","t":"**Norchapel** — Норчапель","o":false},{"id":"geo_names-q4_3","t":"**Rivington** — Ривингтон","o":false},{"id":"geo_names-q4_4","t":"**Sow’s Foot** — Копыто","o":false},{"id":"geo_names-q4_5","t":"**Stonyeyes** — Камнезоры","o":false},{"id":"geo_names-q4_6","t":"**Tumbledown** — Развалиха","o":false},{"id":"geo_names-q4_7","t":"**Twin Songs** — Две песни","o":false},{"id":"geo_names-q4_8","t":"**Whitkeep** — Белые стены","o":false},{"id":"geo_names-q4_9","t":"**Wyrm’s Crossing** — ?","o":false},{"id":"geo_names-q4_10","t":"**Wyrm’s Rock** — ?","o":false}]},{"id":"geo_names-s5","h":"Врата и примечательные места","items":[{"id":"geo_names-q5_0","t":"**Basilisk Gate** — ?","o":false},{"id":"geo_names-q5_1","t":"**Black Dragon Gate** — ?","o":false},{"id":"geo_names-q5_2","t":"**Cliffgate** — ?","o":false},{"id":"geo_names-q5_3","t":"**Balduran Looks Out to Sea** (статуя) — ?","o":false},{"id":"geo_names-q5_4","t":"**Cliffside Cemetery** — ?","o":false},{"id":"geo_names-q5_5","t":"**Szarr Family Crypts** — ?","o":false},{"id":"geo_names-q5_6","t":"**Danthelon’s Dancing Axe** — ? (ср. дом Дантелон)","o":false},{"id":"geo_names-q5_7","t":"**Church of Last Hope** — ?","o":false},{"id":"geo_names-q5_8","t":"**Calim Jewel Emporium** — ?","o":false},{"id":"geo_names-q5_9","t":"**The Oasis** — ?","o":false},{"id":"geo_names-q5_10","t":"**Hamhocks Slaughterhouse** — ?","o":false}]},{"id":"geo_names-s6","h":"Наши названия во Вратах (без оригинала)","items":[{"id":"geo_names-q6_0","t":"Угляшка — новый район, без оригинала: трущобы у выработанного угольного карьера","o":false},{"id":"geo_names-q6_1","t":"Воронья лапка — околоток Кручи (The Heap)","o":false},{"id":"geo_names-q6_2","t":"Веснянки — район на Круче (The Heap)","o":false},{"id":"geo_names-q6_3","t":"«Колесо», «Кузница», Улей, «Малиновка», Гостевой дом Арра","o":false},{"id":"geo_names-q6_4","t":"Университет Врат Балдура; вирелий Надежды (Ривингтон)","o":false},{"id":"geo_names-q6_5","t":"Особняк Вельмонт","o":false},{"id":"geo_names-H1","t":"**The Heap** — Круча (новый район, «спальный»)","o":false}]},{"id":"geo_names-s7","h":"Окрестности Врат","items":[{"id":"geo_names-q7_0","t":"**Chionthar** (река) — Чионтар","o":false},{"id":"geo_names-q7_1","t":"**Sword Coast** — Побережье Мечей","o":false},{"id":"geo_names-q7_2","t":"**Sea of Swords** — ?","o":false},{"id":"geo_names-q7_3","t":"**Coast Way** — ?","o":false},{"id":"geo_names-q7_4","t":"**Trade Way** — ?","o":false},{"id":"geo_names-q7_5","t":"**Fields of the Dead** — ?","o":false},{"id":"geo_names-q7_6","t":"**Trielta Hills** — ?","o":false},{"id":"geo_names-q7_7","t":"**Cloakwood** — ?","o":false},{"id":"geo_names-q7_8","t":"**Wood of Sharp Teeth** — ?","o":false},{"id":"geo_names-q7_9","t":"**Rat Hills** — ?","o":false},{"id":"geo_names-q7_10","t":"**Candlekeep** — ?","o":false},{"id":"geo_names-q7_11","t":"**Beregost** — ?","o":false},{"id":"geo_names-q7_12","t":"**Nashkel** — ?","o":false},{"id":"geo_names-q7_13","t":"**Friendly Arm Inn** — ?","o":false},{"id":"geo_names-q7_14","t":"**Ulgoth’s Beard** — ?","o":false},{"id":"geo_names-q7_15","t":"**Larswood** — ?","o":false},{"id":"geo_names-q7_16","t":"**Durlag’s Tower** — ?","o":false},{"id":"geo_names-q7_17","t":"**Bridgefort** — ?","o":false},{"id":"geo_names-q7_18","t":"**Boareskyr Bridge** — ?","o":false},{"id":"geo_names-q7_19","t":"**Troll Claws** — ?","o":false},{"id":"geo_names-q7_20","t":"**Elturel** — Эльтурель","o":false},{"id":"geo_names-q7_21","t":"**Elturgard** — Эльтургард","o":false},{"id":"geo_names-q7_22","t":"**Soubar** — ?","o":false},{"id":"geo_names-q7_23","t":"**Scornubel** — ?","o":false},{"id":"geo_names-q7_24","t":"**Berdusk** — ?","o":false},{"id":"geo_names-q7_25","t":"**Iriaebor** — ?","o":false},{"id":"geo_names-q7_26","t":"**Triel** — ?","o":false},{"id":"geo_names-q7_27","t":"Велтон, Сахвейт — наши названия","o":false}]},{"id":"geo_names-s8","h":"Север","items":[{"id":"geo_names-q8_0","t":"**Waterdeep** — Глубоководье (Вотердип)","o":false},{"id":"geo_names-q8_1","t":"**Neverwinter** — Невервинтер","o":false},{"id":"geo_names-q8_2","t":"**Neverwinter Wood** — ?","o":false},{"id":"geo_names-q8_3","t":"**Luskan** — Лускан","o":false},{"id":"geo_names-q8_4","t":"**Mirabar** — Мирабар","o":false},{"id":"geo_names-q8_5","t":"**Icewind Dale** — Долина ледяного ветра","o":false},{"id":"geo_names-q8_6","t":"**Silverymoon** — Сильверимун","o":false},{"id":"geo_names-q8_7","t":"**Silver Marches** — Серебряные Пределы","o":false},{"id":"geo_names-q8_8","t":"**Nesmé** — Несме","o":false},{"id":"geo_names-q8_9","t":"**Helm’s Hold** — Хелмс-Холд","o":false},{"id":"geo_names-q8_10","t":"**Daggerford** — Даггерфорт","o":false},{"id":"geo_names-q8_11","t":"**Secomber** — ?","o":false},{"id":"geo_names-q8_12","t":"**Phandalin** — Фандалин","o":false},{"id":"geo_names-q8_13","t":"**Yartar** — Яртар","o":false},{"id":"geo_names-q8_14","t":"**High Forest** — Высокий лес","o":false},{"id":"geo_names-q8_15","t":"**Gray Peaks** — Серые пики","o":false},{"id":"geo_names-q8_16","t":"**Olostin’s Hold** — ?","o":false},{"id":"geo_names-q8_17","t":"**Sword Mountains** — ?","o":false},{"id":"geo_names-q8_18","t":"**Mere of Dead Men** — ?","o":false},{"id":"geo_names-q8_19","t":"**Kryptgarden** — ?","o":false},{"id":"geo_names-q8_20","t":"Крутогорье, Сыроземье, Ронг — наши названия","o":false}]},{"id":"geo_names-s9","h":"Юг и дальние земли","items":[{"id":"geo_names-q9_0","t":"**Amn** — Амн","o":false},{"id":"geo_names-q9_1","t":"**Athkatla** — Аткатла","o":false},{"id":"geo_names-q9_2","t":"**Tethyr** — ?","o":false},{"id":"geo_names-q9_3","t":"**Calimshan** — Калимшан","o":false},{"id":"geo_names-q9_4","t":"**Chult** — Чульт","o":false},{"id":"geo_names-q9_5","t":"**Maztica** — Мазтика","o":false},{"id":"geo_names-q9_6","t":"**Najara** — Найара","o":false},{"id":"geo_names-q9_7","t":"**Cormyr** — Кормир","o":false},{"id":"geo_names-q9_8","t":"**Dragonmere** — Драконье море","o":false},{"id":"geo_names-q9_9","t":"**Sembia** — Сембия","o":false},{"id":"geo_names-q9_10","t":"**The Dales** — Долины","o":false},{"id":"geo_names-q9_11","t":"**Thay** — Тэй","o":false},{"id":"geo_names-q9_12","t":"**Rashemen** — Рашемен","o":false},{"id":"geo_names-q9_13","t":"Альтавора — наше название (столица)","o":false}]},{"id":"geo_names-s10","h":"Подземье","items":[{"id":"geo_names-q10_0","t":"**Underdark** — Подземье","o":false},{"id":"geo_names-q10_1","t":"**Menzoberranzan** — Мензоберранзан","o":false},{"id":"geo_names-q10_2","t":"Полуночная марка — наше название","o":false}]}],"images":[]};
+function glParse(t){
+  t=String(t||"");let m=t.match(/^\*\*(.+?)\*\*\s*(?:\(([^)]*)\))?\s*—\s*(.*)$/);
+  let en="",ru="",note="";
+  if(m){en=m[1].trim();note=(m[2]||"").trim();ru=m[3].trim()}
+  else{const k=t.indexOf(" — ");if(k>=0){ru=t.slice(0,k).trim();note=t.slice(k+3).trim()}else ru=t.trim()}
+  const k2=ru.indexOf(" · ");if(k2>=0){note=(note?note+"; ":"")+ru.slice(k2+3).trim();ru=ru.slice(0,k2).trim()}
+  const pm=ru.match(/^(.*?)\s*\(([^()]*)\)\s*$/);if(pm&&pm[1]){ru=pm[1].trim();note=(note?note+"; ":"")+pm[2].trim()}
+  if(ru==="?") ru="";
+  return {en,ru,note};
+}
+function glCompose(r){
+  const ru=r.ru.trim()||"?";
+  let t=r.en.trim()?"**"+r.en.trim()+"** — "+ru:ru;
+  if(r.note.trim()) t+=" · "+r.note.trim();
+  return t;
+}
+function glossaryView(D){
+  const a=D.arts.get(GLOSS_ID);
+  let h='<div class="page gl"><div class="crumb">Переводы названий</div><h1 class="title">Глоссарий</h1>';
+  if(!a){
+    if(D.gm){ensureGloss();return h+'<div class="empty">Создаю глоссарий…</div></div>'}
+    return h+'<div class="empty">Мастер пока ничего не открыл в глоссарии.</div></div>';
+  }
+  const gm=D.gm;
+  h+='<p class="hint" style="margin:0 0 10px">'+(gm?"Правьте прямо в таблице — сохраняется само, когда уходите из ячейки. Пустой перевод = ещё не переведено. Глаз — показать строку игрокам.":"Переводы названий мира.")+'</p>';
+  h+='<div class="gl-tools"><label class="sr" for="glq">Найти</label><input id="glq" placeholder="Найти название…" value="'+esc(S.glq||"")+'">'+
+     (gm?'<label class="qa-chk"><input type="checkbox" id="glmiss"'+(S.glmiss?" checked":"")+'> только без перевода</label>':"")+"</div>";
+  a.sections.forEach((sec,si)=>{
+    if(/^как пользоваться/i.test(sec.h)) return;
+    const rows=sec.items.filter(i=>!i.table);
+    if(!gm&&!rows.length) return;
+    h+='<section class="sec gl-sec" data-sec="'+sec.id+'"><h2><span class="h">'+esc(sec.h)+'</span>'+(gm?'<span class="secbtns"><span class="hint mono">'+rows.filter(i=>glParse(i.t).ru).length+"/"+rows.length+"</span></span>":"")+'</h2><div class="tw"><table class="gl-t"><thead><tr><th>Оригинал</th><th>Перевод</th><th>Примечание</th>'+(gm?"<th></th>":"")+"</tr></thead><tbody>";
+    for(const i of rows){
+      const r=glParse(i.t);
+      if(gm) h+='<tr data-row="'+i.id+'" class="'+(i.o?"":"gl-closed")+(r.ru?"":" gl-miss")+'"><td><input data-gl="en" value="'+esc(r.en)+'" aria-label="Оригинал"></td><td><input data-gl="ru" value="'+esc(r.ru)+'" placeholder="?" aria-label="Перевод"></td><td><input data-gl="note" value="'+esc(r.note)+'" aria-label="Примечание"></td><td class="gl-act">'+eyeBtn(i.o,"tq",'data-a="'+GLOSS_ID+'" data-q="'+i.id+'"',true)+'<button class="tool" data-glact="del" data-q="'+i.id+'" aria-label="Удалить строку">'+I.x+"</button></td></tr>";
+      else h+='<tr data-row="'+i.id+'"><td>'+esc(r.en)+"</td><td>"+esc(r.ru||"—")+"</td><td>"+esc(r.note)+"</td></tr>";
+    }
+    h+="</tbody></table></div>"+(gm?'<div class="addrow" style="margin-left:0"><button data-glact="addrow" data-sec="'+sec.id+'">+ строка</button></div>':"")+"</section>";
+  });
+  if(gm) h+='<div class="addrow" style="margin-left:0;margin-top:22px"><button data-glact="addsec">+ раздел</button><a class="textbtn" href="#a-'+GLOSS_ID.replace(/_/g,"-")+'">открыть как статью</a></div>';
+  return h+"</div>";
+}
+function ensureGloss(){if(S.arts.get(GLOSS_ID)||S._glossMaking) return;S._glossMaking=true;const a=clone(GLOSS_SEED);a.updated=Date.now();saveArt(a,null,{noUndo:true})}
+function glFilter(){
+  const q=(S.glq||"").trim().toLowerCase();
+  document.querySelectorAll(".gl-t tbody tr").forEach(tr=>{
+    const txt=[...tr.querySelectorAll("input")].map(x=>x.value).join(" ").toLowerCase()||tr.textContent.toLowerCase();
+    const miss=tr.classList.contains("gl-miss");
+    tr.hidden=!!(q&&!txt.includes(q))||(S.glmiss&&!miss);
+  });
+}
+function glSaveRow(tr){
+  S.glHold=Date.now();const qid=tr.dataset.row;const a0=S.arts.get(GLOSS_ID);if(!a0) return;
+  const r={en:tr.querySelector('[data-gl="en"]').value,ru:tr.querySelector('[data-gl="ru"]').value,note:tr.querySelector('[data-gl="note"]').value};
+  const a=clone(a0);const f=findItem(a,qid);if(!f) return;
+  const t=glCompose(r);if(f.item.t===t) return;
+  f.item.t=t;a.updated=Date.now();S.arts.set(a.id,a);tr.classList.toggle("gl-miss",!r.ru.trim());
+  queue(async()=>{await S.db.collection("gm").doc(a.id).set(a);if(f.item.o) await syncPub([a.id],false)});
+}
+document.addEventListener("change",e=>{
+  if(e.target.dataset&&e.target.dataset.gl){const tr=e.target.closest("tr");if(tr) glSaveRow(tr)}
+  if(e.target.id==="glmiss"){S.glmiss=e.target.checked;glFilter()}
+});
+document.addEventListener("input",e=>{if(e.target.id==="glq"){S.glq=e.target.value;glFilter()}});
+document.addEventListener("focusout",e=>{if(e.target.dataset&&e.target.dataset.gl) setTimeout(()=>{if(!(document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.gl)) applyPending()},300)});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset&&e.target.dataset.gl){e.preventDefault();e.target.blur()}});
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-glact]");if(!b) return;
+  const a0=S.arts.get(GLOSS_ID);if(!a0) return;const prev=clone(a0);const a=clone(a0);
+  if(b.dataset.glact==="addrow"){const sec=a.sections.find(s=>s.id===b.dataset.sec);const id=GLOSS_ID+"-"+uid();sec.items.push({id,t:"?",o:false});saveArt(a,prev,{noUndo:true});
+    setTimeout(()=>{const el=document.querySelector('tr[data-row="'+id+'"] [data-gl="en"]');if(el) el.focus()},60)}
+  if(b.dataset.glact==="del"){const f=findItem(a,b.dataset.q);f.sec.items.splice(f.idx,1);saveArt(a,prev);toastUndo("Строка удалена.")}
+  if(b.dataset.glact==="addsec"){a.sections.push({id:GLOSS_ID+"-s"+uid(),h:"Новый раздел",items:[]});saveArt(a,prev,{noUndo:true});toast("Раздел добавлен — переименовать его можно в статье.")}
+});
+
+/* ---------- exports ---------- */
+async function exportPlayers(){
+  const D=S.mode==="gm"?(()=>{const p=S.preview;S.preview=true;const d=view();S.preview=p;return d})():view();
+  toast("Собираю файл…");
+  const cache={};
+  async function dataUrl(asset){
+    if(cache[asset]) return cache[asset];
+    try{const r=await fetch(imgSrc(asset));const b=await r.blob();cache[asset]=await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(b)})}catch(e){cache[asset]=""}
+    return cache[asset];
+  }
+  const fx=t=>esc(t).replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/\[\[([a-z0-9_]+)\|([^\]]*)\]\]/g,'<a href="#$1">$2</a>');
+  let body="";
+  for(const [c,cn] of CATS){
+    const list=sortArts([...D.arts.values()].filter(a=>a.cat===c));if(!list.length) continue;
+    body+="<h2 class=cat>"+esc(cn)+"</h2>";
+    for(const a of list){
+      body+='<article id="'+a.id+'"><h3>'+esc(pubTitle(a))+"</h3>";
+      if(a.names.length>1) body+="<p class=al>"+a.names.slice(1).map(n=>esc(n.t)).join(" · ")+"</p>";
+      if(a.lead) body+="<p class=ld>"+fx(a.lead.t)+"</p>";
+      for(const im of a.images||[]){const u=await dataUrl(im.asset);if(u) body+='<figure><img src="'+u+'" alt=""><figcaption>'+fx(im.cap||"")+"</figcaption></figure>"}
+      for(const s of a.sections){body+="<h4>"+esc(s.h)+"</h4><ul>";for(const i of s.items) body+="<li>"+(i.table?"<table><tr>"+i.table.cols.map(x=>"<th>"+esc(x)+"</th>").join("")+"</tr>"+i.table.rows.map(r=>"<tr>"+r.map(x=>"<td>"+esc(x)+"</td>").join("")+"</tr>").join("")+"</table>":fx(i.t))+"</li>";body+="</ul>"}
+      body+="</article>";
+    }
+  }
+  if((D.tl.events||[]).length){body+="<h2 class=cat>Хронология</h2><ul>";for(const e of D.tl.events) body+="<li><b>"+(e.zf!=null?(e.ap?"≈":"")+(e.zf+1516)+" ДС ("+zLabel(e.zf)+")":"")+(e.day?", "+esc(e.day):"")+"</b> — "+fx(e.t)+"</li>";body+="</ul>"}
+  const html='<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Эвия — для игроков</title><style>body{font:16px/1.6 Georgia,serif;max-width:760px;margin:0 auto;padding:24px 16px;color:#1c2430;background:#f8f9f6}h1{font-weight:400;font-size:40px}h2.cat{margin-top:48px;border-bottom:2px solid #1c2430}h3{font-size:26px;margin:30px 0 4px;font-weight:400}h4{margin:14px 0 4px}.ld{font-size:18px}.al{color:#5d6672;margin:0}a{color:#1d7466}figure{margin:10px 0;max-width:360px}img{max-width:100%}figcaption{font-size:13px;color:#5d6672}table{border-collapse:collapse;font-size:14px}td,th{border:1px solid #cbd1ca;padding:4px 8px;text-align:left}</style></head><body><h1>Эвия</h1><p>Версия для игроков от '+new Date().toLocaleDateString("ru-RU")+".</p>"+body+"</body></html>";
+  try{await S.downloads.save({filename:"evia-dlya-igrokov.html",data:html});}catch(err){if(err&&err.code!=="declined") toast("Не удалось сохранить файл.")}
+}
+async function backup(){
+  const data=JSON.stringify({savedAt:new Date().toISOString(),articles:[...S.arts.values()],timeline:S.tl},null,1);
+  try{await S.downloads.save({filename:"evia-arkhiv-mastera.json",data})}catch(err){if(err&&err.code!=="declined") toast("Не удалось сохранить файл.")}
+}
+
+/* ---------- boot ---------- */
+window.__evia={visSet,pubOf,pubTimeline,linkFilter,renderMain,render,toast};
+S.route=parseHash();
+render();
+(async function boot(){
+  const cl=window.claude;
+  if(!cl||!cl.use){S.mode="noaccess";render();return}
+  const [user,db,dl]=await Promise.all([cl.use("user"),cl.use("db"),cl.use("downloads")]);
+  S.downloads=dl;
+  if(!db){S.mode="noaccess";render();return}
+  S.db=db;
+  const canEdit=user?await user.canEdit():false;
+  if(canEdit){
+    S.mode="gm";render();
+    db.collection("gm").onSnapshot(snap=>{
+      const m=new Map();let tl=null;
+      for(const d of snap.docs){const v=xnorm(d.data());if(d.id==="_timeline") tl=v;else m.set(d.id,v)}
+      S._pending={m,tl};applyPending();
+    },err=>{console.error(err);toast("Связь с архивом прервалась — обновите страницу.")});
+    cl.use("assets").then(a=>{S.assets=a;if(S.route.v==="art") renderMain()});
+  } else {
+    S.mode="player";render();
+    db.collection("pub").onSnapshot(snap=>{
+      const m=new Map();let tl={events:[]};
+      for(const d of snap.docs){const v=d.data();if(d.id==="_timeline") tl=v;else m.set(d.id,v)}
+      S.pub=m;S.pubTl=tl;if(!S.edit) render();
+    },err=>{console.error(err)});
+  }
+})();
+})();
+</script>
+
+</body>
+</html>
