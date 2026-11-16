@@ -1284,6 +1284,21 @@ async function importOps(ops){
   const findIt=(a,qid)=>{if(a.lead&&a.lead.id===qid) return a.lead;for(const s of a.sections){const i=s.items.find(i=>i.id===qid);if(i) return i}return null};
   await queue(async()=>{
     for(const o of ops){
+      if(o.op==="renameid"){
+        // смена внутреннего кода статьи: сама статья, коды её строк и все ссылки [[код|…]]
+        const from=String(o.from),to=String(o.to);const cur=S.arts.get(from);
+        if(!cur||S.arts.has(to)||!/^[a-z0-9_]+$/.test(to)){skipped++;continue}
+        const fixId=v=>v===from?to:(typeof v==="string"&&v.startsWith(from+"-")?to+v.slice(from.length):v);
+        const ids=v=>{if(Array.isArray(v)) return v.map(ids);if(v&&typeof v==="object"){const r={};for(const k in v) r[k]=k==="id"?fixId(v[k]):ids(v[k]);return r}return v};
+        const nd=ids(cur);nd.id=to;nd.updated=Date.now();
+        S.arts.delete(from);S.arts.set(to,nd);touched.add(to);fixed++;
+        await S.db.collection("gm").doc(to).set(nd);await S.db.collection("gm").doc(from).delete();
+        const lre=new RegExp("\\[\\["+from+"(?=[|\\]])","g");const f=t=>t.replace(lre,"[["+to);
+        for(const [id,a] of S.arts){const b=walk(a,f);if(JSON.stringify(b)!==JSON.stringify(a)){b.updated=Date.now();S.arts.set(id,b);touched.add(id);await S.db.collection("gm").doc(id).set(b)}}
+        const t2=walk(S.tl,f);if(JSON.stringify(t2)!==JSON.stringify(S.tl)){S.tl=t2;tlTouched=true;await S.db.collection("gm").doc("_timeline").set(S.tl)}
+        if(S.route.v==="art"&&S.route.id===from) location.hash="#a-"+to.replace(/_/g,"-");
+        continue;
+      }
       if(o.op==="rename"){
         const re=new RegExp(o.re,"gu");const f=t=>t.replace(re,o.to);
         for(const [id,a] of S.arts){const b=walk(a,f);if(JSON.stringify(b)!==JSON.stringify(a)){b.updated=Date.now();S.arts.set(id,b);touched.add(id);fixed++;await S.db.collection("gm").doc(id).set(b)}}
