@@ -1284,6 +1284,14 @@ async function importOps(ops){
   const findIt=(a,qid)=>{if(a.lead&&a.lead.id===qid) return a.lead;for(const s of a.sections){const i=s.items.find(i=>i.id===qid);if(i) return i}return null};
   await queue(async()=>{
     for(const o of ops){
+      if(o.op==="patch"){
+        // точечная правка: имя, описание, раздел, факт или картинка по коду; set — поля (o, t, h, ph, cap)
+        const id=String(o.path).replace(/^gm\//,"");const cur=S.arts.get(id);if(!cur){skipped++;continue}
+        const a=clone(cur);const all=[...(a.names||[]),a.lead,...a.sections,...a.sections.flatMap(x=>x.items),...(a.images||[])].filter(Boolean);
+        const x=all.find(v=>v.id===o.id);if(!x){skipped++;continue}
+        let ch=false;for(const k in o.set){const v=o.set[k];if(v===null){if(k in x){delete x[k];ch=true}}else if(JSON.stringify(x[k])!==JSON.stringify(v)){x[k]=v;ch=true;if(k==="o"&&v) x.ot=Date.now()}}
+        if(!ch) continue;a.updated=Date.now();S.arts.set(id,a);touched.add(id);fixed++;await S.db.collection("gm").doc(id).set(a);continue;
+      }
       if(o.op==="renameid"){
         // смена внутреннего кода статьи: сама статья, коды её строк и все ссылки [[код|…]]
         const from=String(o.from),to=String(o.to);const cur=S.arts.get(from);
