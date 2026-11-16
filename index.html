@@ -219,6 +219,13 @@ figure.img figcaption span{flex:1;min-width:0}
 mark{background:var(--verd-soft);color:inherit;border-radius:2px;padding:0 1px}
 
 .qadd-btn{flex:none;border-radius:999px;font-size:13px;padding:6px 12px}
+.suggest{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:28px;padding-top:14px;border-top:1px solid var(--line)}
+.inbox-card{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0;background:var(--sheet);display:grid;gap:8px}
+.inbox-card.done{opacity:.6}
+.inbox-card .meta{font:500 12px/1.4 var(--f-mono);color:var(--muted)}
+.inbox-card textarea{width:100%;min-height:70px;font:inherit;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+.inbox-card .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.inbox-card blockquote{margin:0;padding-left:10px;border-left:2px solid var(--line);color:var(--muted);font-size:14px}
 .qa-modal{position:fixed;inset:0;z-index:65;background:rgba(10,12,16,.45);display:grid;place-items:start center;padding:8vh 16px 16px;overflow:auto}
 .qa-box{background:var(--sheet);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);width:min(560px,100%);padding:16px 18px;display:grid;gap:12px}
 .qa-head{display:flex;align-items:center;justify-content:space-between}
@@ -699,6 +706,7 @@ function parseHash(){
   if(h==="map") return {v:"map"};
   if(h==="glossary") return {v:"gloss"};
   if(h==="leaks") return {v:"leaks"};
+  if(h==="inbox") return {v:"inbox"};
   return {v:"home"};
 }
 window.addEventListener("hashchange",()=>{S.route=parseHash();S.edit=null;S.pick=null;S.newArt=false;closeSide();render();window.scrollTo(0,0)});
@@ -759,6 +767,7 @@ function renderMain(){
   if(S.route.v==="map"){m.innerHTML='<div class="page"><div class="crumb">Эвия и Врата Балдура</div><h1 class="title">Карта</h1><div class="wip"><b>WIP</b><p>Карта в работе. Скоро здесь появится интерактивная карта с метками мест из вики.</p></div></div>';return}
   if(S.route.v==="art"){m.innerHTML=articleView(D,S.route.id);return}
   if(S.route.v==="leaks"&&D.gm){m.innerHTML=leaksView();return}
+  if(S.route.v==="inbox"&&D.gm){m.innerHTML=inboxView();return}
   m.innerHTML=homeView(D);
 }
 
@@ -784,6 +793,7 @@ function homeView(D){
     h+='<p>Всё, что известно мастеру. Каждый факт — отдельная строка: <span style="color:var(--verd)">глаз</span> — игроки его видят, <span style="color:var(--secret)">замок</span> — нет. Нажмите на значок, чтобы открыть или скрыть факт.</p>';
     h+='<div class="stats"><div class="stat"><b>'+arts.length+'</b><span>статей</span></div><div class="stat"><b>'+vis+'</b><span>видны игрокам</span></div><div class="stat"><b>'+c.op+' / '+c.tot+'</b><span>фактов открыто</span></div><div class="stat"><b>'+(S.tl.events||[]).length+'</b><span>событий в хронологии</span></div></div>';
     const lk=scanLeaks().fix.length;
+    if(inboxNew()) h+='<a class="leakbadge" href="#inbox" style="margin-right:16px">✉ Новых дополнений от игроков: '+inboxNew()+'</a>';
     if(lk) h+='<a class="leakbadge" href="#leaks">⚠ Скрытые имена в открытом: '+lk+' — проверить</a>';
     h+='<div class="bar"><i style="width:'+(c.tot?Math.round(c.op/c.tot*100):0)+'%"></i></div>';
     h+='<div class="legend"><span><span class="eye on" style="width:auto;height:auto">'+I.eye+'</span>открыто игрокам</span><span><span class="eye" style="width:auto;height:auto">'+I.lock+'</span>только мастеру</span><span><span class="dot on"></span>статья видна</span><span><span class="dot"></span>статья скрыта</span></div>';
@@ -924,6 +934,7 @@ function articleView(D,id){
   if(back.length||tlHit){
     h+='<div class="back"><h3>Упоминается в</h3><ul>'+sortArts(back).map(b=>'<li><a href="#a-'+b.id.replace(/_/g,"-")+'">'+esc(title(b,gm))+"</a></li>").join("")+(tlHit?'<li><a href="#timeline">Хронология</a></li>':"")+"</ul></div>";
   }
+  if(!gm&&FORM.action) h+='<div class="suggest"><button class="btn" data-act="sugg" data-a="'+a.id+'">✎ Дополнить</button><span class="hint">Помните об этом больше? Напишите мастеру.</span></div>';
   if(gm){
     h+='<div class="gmfoot"><span class="hint mono">id: '+esc(a.id)+'</span><button class="textbtn" data-act="ecat" data-a="'+a.id+'">Переместить</button><button class="textbtn danger" data-act="delart" data-a="'+a.id+'">Удалить статью</button></div>';
     if(S.edit&&S.edit.kind==="cat"&&S.edit.a===a.id){
@@ -1063,6 +1074,93 @@ async function rebuildAll(){
     toast("Готово: игрокам видно "+n+" "+plural(n,"статья","статьи","статей")+".");
   });
 }
+/* ---------- дополнения от игроков (Google Форма → таблица мастера) ---------- */
+const FORM={action:"",from:"",to:"",text:""};
+function openSuggest(aid){
+  const D=view();const a=D.arts.get(aid);if(!a) return;
+  let who="";try{who=localStorage.getItem("evia-from")||""}catch(e){}
+  const facts=a.sections.flatMap(s=>s.items.filter(i=>!i.table).map(i=>({id:i.id,t:plain(i.t)})));
+  const m=$("#qadd-modal");
+  m.innerHTML='<div class="qa-box" role="dialog" aria-modal="true" aria-labelledby="sg-h"><div class="qa-head"><h2 id="sg-h">Дополнить: '+esc(title(a,false))+'</h2><button class="tool" data-act="sgclose" aria-label="Закрыть">'+I.x+'</button></div>'+
+   '<p class="hint" style="margin:0">Мастер прочитает и, если всё так, добавит это в вики. Другие игроки ваше сообщение не увидят.</p>'+
+   '<label class="qa-l">От кого<input id="sg-from" value="'+esc(who)+'" placeholder="Имя игрока или персонажа" autocomplete="name"></label>'+
+   '<label class="qa-l">К чему<select id="sg-to"><option value="">Ко всей статье</option>'+facts.map(f=>'<option value="'+f.id+'">'+esc(f.t.length>90?f.t.slice(0,88)+"…":f.t)+"</option>").join("")+'</select></label>'+
+   '<label class="qa-l">Что вы помните<textarea id="sg-text" rows="5" style="font:inherit;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)"></textarea></label>'+
+   '<div class="qa-foot"><button class="btn pri" data-act="sgsend" data-a="'+a.id+'">Отправить мастеру</button><button class="btn" data-act="sgclose">Отмена</button></div></div>';
+  m.hidden=false;setTimeout(()=>$(who?"#sg-text":"#sg-from")?.focus(),30);
+}
+async function sendSuggest(aid){
+  const D=view();const a=D.arts.get(aid);const who=$("#sg-from").value.trim(),txt=$("#sg-text").value.trim(),q=$("#sg-to").value;
+  if(!who){toast("Напишите, от кого.");$("#sg-from").focus();return}
+  if(!txt){toast("Напишите, что вы помните.");$("#sg-text").focus();return}
+  try{localStorage.setItem("evia-from",who)}catch(e){}
+  let to=title(a,false)+" ["+a.id+"]";
+  if(q){const it=a.sections.flatMap(s=>s.items).find(i=>i.id===q);if(it){const t=plain(it.t);to+=" · «"+(t.length>120?t.slice(0,118)+"…":t)+"» ["+q+"]"}}
+  const body=new URLSearchParams();body.set(FORM.from,who);body.set(FORM.to,to);body.set(FORM.text,txt);
+  const b=$('[data-act="sgsend"]');if(b){b.disabled=true;b.textContent="Отправляю…"}
+  try{await fetch(FORM.action,{method:"POST",mode:"no-cors",body});$("#qadd-modal").hidden=true;toast("Отправлено мастеру. Спасибо!")}
+  catch(e){if(b){b.disabled=false;b.textContent="Отправить мастеру"}toast("Не получилось отправить — проверьте интернет и попробуйте ещё раз.")}
+}
+function csvParse(t){
+  const rows=[];let row=[],f="",q=false;
+  for(let i=0;i<t.length;i++){const c=t[i];
+    if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c==='"') q=true;else if(c===","){row.push(f);f=""}else if(c==="\n"){row.push(f);rows.push(row);row=[];f=""}else if(c!=="\r") f+=c;
+  }
+  if(f||row.length){row.push(f);rows.push(row)}
+  return rows;
+}
+function inboxUrl(){try{return localStorage.getItem("evia-inbox-csv")||""}catch(e){return ""}}
+async function loadInbox(quiet){
+  const url=inboxUrl();if(!url){S.inbox=null;return}
+  try{
+    const r=await fetch(url+(url.includes("?")?"&":"?")+"t="+Date.now(),{cache:"no-store"});if(!r.ok) throw new Error(r.status);
+    const rows=csvParse(await r.text());const head=(rows.shift()||[]).map(x=>x.toLowerCase());
+    const col=(re,d)=>{const k=head.findIndex(h=>re.test(h));return k>=0?k:d};
+    const cF=col(/кого/,1),cT=col(/чему|к ч/,2),cX=col(/помни|текст|что/,3);
+    S.inbox=rows.filter(r=>r.some(Boolean)).map(r=>{const from=(r[cF]||"").trim(),to=(r[cT]||"").trim(),text=(r[cX]||"").trim(),when=(r[0]||"").trim();
+      let h=0;for(const ch of when+from+text) h=(h*31+ch.charCodeAt(0))|0;
+      const ids=[...to.matchAll(/\[([a-z0-9_-]+)\]/g)].map(m=>m[1]);
+      return {id:"i"+(h>>>0).toString(36),when,from,to,text,art:ids[0]||"",item:ids[1]||""}}).reverse();
+    S.inboxErr="";
+  }catch(e){S.inbox=S.inbox||[];S.inboxErr="Не удалось загрузить ответы: проверьте ссылку на таблицу (Файл → Поделиться → Опубликовать в интернете → CSV)."}
+  if(!quiet) renderMain();
+}
+function inboxNew(){return S.inbox?S.inbox.filter(x=>!(S.tl.inbox||{})[x.id]).length:0}
+function inboxView(){
+  let h='<div class="page"><div class="crumb">Только для мастера</div><h1 class="title">Дополнения от игроков</h1>';
+  if(!inboxUrl()) return h+'<p>Сюда приходят ответы игроков из кнопки «Дополнить». Чтобы их видеть, опубликуйте таблицу с ответами формы: в таблице <b>Файл → Поделиться → Опубликовать в интернете</b>, выберите лист с ответами и формат <b>CSV</b>, нажмите «Опубликовать» и вставьте ссылку сюда. Ссылка хранится только в этом браузере.</p><div class="newform"><label>Ссылка на CSV<input id="inbox-url" placeholder="https://docs.google.com/spreadsheets/d/e/…/pub?output=csv"></label><div class="row"><button class="btn pri" data-act="inboxsave">Сохранить</button></div></div></div>';
+  if(!S.inbox){loadInbox();return h+'<p class="hint">Загружаю…</p></div>'}
+  const st=S.tl.inbox||{};const list=S.inbox.filter(x=>S.inboxAll||!st[x.id]);
+  h+='<div class="row" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn" data-act="inboxreload">⟳ Обновить</button><label class="hint"><input type="checkbox" data-act="inboxall"'+(S.inboxAll?" checked":"")+'> показать обработанные</label><span style="flex:1"></span><button class="textbtn" data-act="inboxforget">Сменить ссылку</button></div>';
+  if(S.inboxErr) h+='<p style="color:var(--secret)">'+esc(S.inboxErr)+"</p>";
+  if(!list.length) h+='<p class="hint">'+(S.inbox.length?"Новых дополнений нет.":"Пока никто ничего не прислал.")+"</p>";
+  const arts=sortArts([...S.arts.values()].filter(a=>a.cat!=="meta"));
+  for(const x of list){
+    const a=S.arts.get(x.art);const it=a&&x.item?a.sections.flatMap(s=>s.items).find(i=>i.id===x.item):null;
+    h+='<div class="inbox-card'+(st[x.id]?" done":"")+'" data-ib="'+x.id+'"><div class="meta">'+esc(x.from||"без имени")+" · "+esc(x.when)+(st[x.id]?" · "+(st[x.id]==="r"?"отклонено":"добавлено"):"")+"</div>";
+    const low=x.to.toLowerCase();const guess=a?null:arts.find(z=>z.names.some(n=>n.t.length>=4&&low.includes(n.t.toLowerCase())))||arts.find(z=>z.names.some(n=>low.length>=4&&n.t.toLowerCase().includes(low)));
+    h+=a?'<div>К статье <a href="#a-'+a.id.replace(/_/g,"-")+'">'+esc(title(a,true))+"</a></div>":'<div><label class="qa-l">К статье<select class="ib-art"><option value="">— выберите статью —</option>'+arts.map(z=>'<option value="'+z.id+'"'+(guess&&guess.id===z.id?" selected":"")+">"+esc(title(z,true))+"</option>").join("")+"</select></label>"+(x.to?'<span class="hint">игрок написал: '+esc(x.to)+"</span>":"")+"</div>";
+    if(it) h+="<blockquote>"+esc(plain(it.t))+"</blockquote>";
+    h+='<textarea class="ib-text">'+esc(x.text)+'</textarea>';
+    if(!st[x.id]) h+='<div class="row"><label class="hint"><input type="checkbox" class="ib-attr" checked> подписать «со слов: '+esc(x.from||"игрока")+'»</label><span style="flex:1"></span><button class="btn pri" data-act="ibadd" data-v="0">Добавить скрытым</button><button class="btn" data-act="ibadd" data-v="1">Добавить и открыть</button><button class="btn" data-act="ibrej">Отклонить</button></div>';
+    else h+='<div class="row"><button class="textbtn" data-act="ibundo">Вернуть во входящие</button></div>';
+    h+="</div>";
+  }
+  return h+"</div>";
+}
+function inboxMark(id,v){const prev=clone(S.tl);S.tl.inbox={...(S.tl.inbox||{})};if(v) S.tl.inbox[id]=v;else delete S.tl.inbox[id];saveTl(prev)}
+function inboxAdd(card,open){
+  const id=card.dataset.ib;const x=(S.inbox||[]).find(z=>z.id===id);if(!x) return;
+  const aid=x.art&&S.arts.has(x.art)?x.art:card.querySelector(".ib-art")?.value;const a0=S.arts.get(aid);if(!a0){toast("Выберите, в какую статью добавить.");return}
+  let t=card.querySelector(".ib-text").value.trim();if(!t){toast("Текст пустой.");return}
+  if(card.querySelector(".ib-attr")?.checked&&x.from) t+=" (со слов: "+x.from+")";
+  const a=clone(a0);const item={id:a.id+"-p"+uid(),t,o:!!open};if(open) item.ot=Date.now();
+  let sec=x.item?a.sections.find(s=>s.items.some(i=>i.id===x.item)):null;
+  if(sec){const k=sec.items.findIndex(i=>i.id===x.item);sec.items.splice(k+1,0,item)}
+  else{sec=a.sections[0];if(!sec){sec={id:a.id+"-s"+uid(),h:"Факты",items:[]};a.sections.push(sec)}sec.items.push(item)}
+  saveArt(a,a0);inboxMark(id,"a");toast("Добавлено в «"+title(a,true)+"»"+(open?" и открыто игрокам.":" скрытым фактом."));
+}
 function moveArt(aid,dir){
   const a=S.arts.get(aid);if(!a) return;
   const sib=sortArts([...S.arts.values()].filter(x=>x.cat===a.cat&&(x.group||"")===(a.group||"")));
@@ -1152,6 +1250,17 @@ document.addEventListener("click",e=>{
     case "leakign": {const prev=clone(S.tl);S.tl.leakIgnore=[...new Set([...(S.tl.leakIgnore||[]),b.dataset.v])];saveTl(prev);toast("Больше не отмечаю «"+b.dataset.v+"…». Отменить — «Вернуть».");break}
     case "egrp": openGroup(b.dataset.c,b.dataset.g);break;
     case "leaks": $("#menu").hidden=true;location.hash="#leaks";break;
+    case "inbox": $("#menu").hidden=true;location.hash="#inbox";break;
+    case "sugg": openSuggest(aid);break;
+    case "sgsend": sendSuggest(aid);break;
+    case "sgclose": $("#qadd-modal").hidden=true;break;
+    case "inboxsave": {const v=($("#inbox-url")?.value||"").trim();if(!/^https:\/\/docs\.google\.com\/spreadsheets\//.test(v)){toast("Нужна ссылка вида https://docs.google.com/spreadsheets/…/pub?output=csv");break}try{localStorage.setItem("evia-inbox-csv",v)}catch(e){}S.inbox=null;renderMain();break}
+    case "inboxforget": try{localStorage.removeItem("evia-inbox-csv")}catch(e){}S.inbox=null;renderMain();break;
+    case "inboxreload": S.inbox=null;renderMain();break;
+    case "inboxall": S.inboxAll=b.checked;renderMain();break;
+    case "ibadd": inboxAdd(b.closest(".inbox-card"),b.dataset.v==="1");break;
+    case "ibrej": inboxMark(b.closest(".inbox-card").dataset.ib,"r");toast("Отклонено. Его можно вернуть, включив «показать обработанные».");break;
+    case "ibundo": inboxMark(b.closest(".inbox-card").dataset.ib,null);break;
     case "ee": S.edit={kind:"ev",q:qid};S.pick=null;renderMain();focusEd();break;
     case "cancel": cancelEdit();break;
     case "save": commitEdit();break;
@@ -1267,6 +1376,7 @@ $("#menubtn").addEventListener("click",()=>{
     h+='<button data-act="exportpl">Скачать версию для игроков (HTML)</button>';
     if(S.mode==="gm") h+='<button data-act="backup">Скачать резервную копию (JSON)</button>';
   }
+  if(S.mode==="gm") h+='<button data-act="inbox">Дополнения от игроков'+(inboxNew()?" ("+inboxNew()+")":"")+'</button><div class="note">Что игроки прислали кнопкой «Дополнить».</div>';
   if(S.mode==="gm") h+='<button data-act="leaks">Проверить утечки имён</button><div class="note">Скрытые имена в том, что видят игроки.</div>';
   if(S.mode==="gm") h+='<button data-act="import">Импортировать дополнения (JSON)</button><div class="note">Файл дополнений от Claude: новые статьи и разделы добавляются скрытыми, ваши правки не перезаписываются.</div>';
   if(!h) h='<div class="note">Дополнительных действий нет.</div>';
@@ -1726,6 +1836,7 @@ render();
       const m=new Map();let tl=null;
       for(const d of snap.docs){const v=xnorm(d.data());if(d.id==="_timeline") tl=v;else m.set(d.id,v)}
       S._pending={m,tl};applyPending();
+      if(!S._ibInit){S._ibInit=true;loadInbox(true).then(()=>{if(S.route.v==="home") renderMain()})}
       if(!S._pubv&&tl&&(tl.pubv||0)<2&&!S.preview){S._pubv=true;const t2=clone(tl);t2.pubv=2;queue(()=>db.collection("gm").doc("_timeline").set(t2)).then(()=>rebuildAll())}
     },err=>{console.error(err);toast("Связь с архивом прервалась — обновите страницу.")});
     cl.use("assets").then(a=>{S.assets=a;if(S.route.v==="art") renderMain()});
