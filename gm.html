@@ -662,7 +662,7 @@ function pubOf(a,vis,arts){
   if(!vis.has(a.id)) return null;
   const tx=t=>linkFilter(t,vis,arts);
   const T=hiddenTerms(arts,vis);
-  return {id:a.id,cat:a.cat,group:pubGroup(a,T),order:a.order||0,
+  return {id:a.id,cat:a.cat,group:"",order:0,
     names:a.names.filter(n=>n.o).map(n=>({id:n.id,t:n.t,o:true})),
     lead:a.lead&&a.lead.o?{id:a.lead.id,t:tx(a.lead.t),o:true,ot:a.lead.ot||0}:null,
     sections:a.sections.map(s=>({id:s.id,h:pubHead(s,T),items:s.items.filter(i=>i.o).map(i=>i.table?{id:i.id,table:i.table,o:true,ot:i.ot||0}:{id:i.id,t:tx(i.t),o:true,ot:i.ot||0})})).filter(s=>s.items.length),
@@ -723,17 +723,14 @@ function renderSide(){
     const list=sortArts([...D.arts.values()].filter(a=>a.cat===c));
     if(!list.length) continue;
     h+="<h4>"+esc(cn)+"</h4>";
-    const def=c==="people"?"Прочие":"";
+    const def=c==="people"&&D.gm?"Прочие":"";
     const gk=a=>a.group||def;
-    const groups=[...new Set(list.map(gk))].sort((x,y)=>(x===""?-1:0)-(y===""?-1:0));
-    const T=D.gm?hiddenTerms(S.arts,visSet(S.arts)):null;
+    const groups=!D.gm?[""]:[...new Set(list.map(gk))].sort((x,y)=>(x===""?-1:0)-(y===""?-1:0));
     for(const g of groups){
-      const members=list.filter(a=>gk(a)===g);
+      const members=D.gm?list.filter(a=>gk(a)===g):list;
       if(g){
         h+="<h5>"+esc(g);
         if(D.gm){
-          const pg=[...new Set(members.map(a=>pubGroup(a,T)||def))];
-          if(!(pg.length===1&&pg[0]===g)) h+='<span class="pg" title="Так эту группу видят игроки">игроки: '+esc(pg.map(x=>x||"без группы").join(", "))+"</span>";
           if(members[0].group) h+='<button class="tool gbtn" data-act="egrp" data-c="'+c+'" data-g="'+esc(members[0].group)+'" aria-label="Изменить группу">'+I.pen+"</button>";
         }
         h+="</h5>";
@@ -931,7 +928,7 @@ function articleView(D,id){
     h+='<div class="gmfoot"><span class="hint mono">id: '+esc(a.id)+'</span><button class="textbtn" data-act="ecat" data-a="'+a.id+'">Переместить</button><button class="textbtn danger" data-act="delart" data-a="'+a.id+'">Удалить статью</button></div>';
     if(S.edit&&S.edit.kind==="cat"&&S.edit.a===a.id){
       const allG=[...new Set([...S.arts.values()].map(x=>x.group).filter(Boolean))].sort((x,y)=>x.localeCompare(y,"ru"));
-      h+='<div class="newform" style="margin-top:12px"><label>Раздел вики<select id="ed">'+CATS.map(([c,n])=>'<option value="'+c+'"'+(c===a.cat?" selected":"")+">"+esc(n)+"</option>").join("")+'</select></label><label>Группа (пусто — без группы)<input id="ed2" list="grp-list" value="'+esc(a.group||"")+'"></label><datalist id="grp-list">'+allG.map(g=>'<option value="'+esc(g)+'">').join("")+'</datalist><label>Группа для игроков (пусто — как у мастера, «—» — без группы)<input id="ed3" value="'+esc(a.pgroup||"")+'"></label><div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri" data-act="save">Сохранить</button><button class="btn" data-act="cancel">Отмена</button><span style="flex:1"></span><button class="btn" data-act="mvart" data-a="'+a.id+'" data-v="-1">↑ Выше в списке</button><button class="btn" data-act="mvart" data-a="'+a.id+'" data-v="1">↓ Ниже</button></div></div>';
+      h+='<div class="newform" style="margin-top:12px"><label>Раздел вики<select id="ed">'+CATS.map(([c,n])=>'<option value="'+c+'"'+(c===a.cat?" selected":"")+">"+esc(n)+"</option>").join("")+'</select></label><label>Группа (пусто — без группы)<input id="ed2" list="grp-list" value="'+esc(a.group||"")+'"></label><datalist id="grp-list">'+allG.map(g=>'<option value="'+esc(g)+'">').join("")+'</datalist><p class="hint" style="margin:0">Игроки групп не видят: у них статьи раздела идут списком по алфавиту.</p><div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri" data-act="save">Сохранить</button><button class="btn" data-act="cancel">Отмена</button><span style="flex:1"></span><button class="btn" data-act="mvart" data-a="'+a.id+'" data-v="-1">↑ Выше в списке</button><button class="btn" data-act="mvart" data-a="'+a.id+'" data-v="1">↓ Ниже</button></div></div>';
     }
   }
   return h+"</article>";
@@ -985,7 +982,7 @@ function searchView(D){
   for(const a of D.arts.values()){
     let score=0,snip="";
     if(a.names.some(n=>n.t.toLowerCase().includes(q))) score+=10;
-    const items=[a.lead,...a.sections.flatMap(s=>s.items)].filter(i=>i&&!i.table);
+    const items=[a.lead,...a.sections.flatMap(s=>[{t:s.h},...s.items])].filter(Boolean).map(i=>i.table?{t:[...i.table.cols,...i.table.rows.flat()].join(" · ")}:i);
     for(const i of items){const p=plain(i.t);const k=p.toLowerCase().indexOf(q);if(k>=0){score+=1;if(!snip)snip=(k>40?"…":"")+p.slice(Math.max(0,k-40),k+110)}}
     if(score) res.push({a,score,snip});
   }
@@ -1075,22 +1072,19 @@ function moveArt(aid,dir){
 }
 function openGroup(cat,g){
   const mem=[...S.arts.values()].filter(x=>x.cat===cat&&x.group===g);if(!mem.length) return;
-  const pgs=[...new Set(mem.map(x=>x.pgroup||""))];
-  const T=hiddenTerms(S.arts,visSet(S.arts));const lk=leakIn(g,T);
   const m=$("#qadd-modal");
   m.innerHTML='<div class="qa-box" role="dialog" aria-modal="true" aria-labelledby="grp-h"><div class="qa-head"><h2 id="grp-h">Группа</h2><button class="tool" data-act="grpclose" aria-label="Закрыть">'+I.x+'</button></div>'+
     '<p class="hint" style="margin:0">'+mem.length+" "+plural(mem.length,"статья","статьи","статей")+" в разделе «"+esc(CATN[cat]||cat)+"». Изменения применятся ко всем.</p>"+
     '<label class="qa-l">Название для мастера<input id="grp-n" value="'+esc(g)+'"></label>'+
-    '<label class="qa-l">Название для игроков (пусто — как у мастера, «—» — без группы)<input id="grp-p" value="'+esc(pgs.length===1?pgs[0]:"")+'" placeholder="'+(pgs.length>1?"сейчас у статей разные":"")+'"></label>'+
-    (lk?'<p class="hint" style="margin:0;color:var(--secret)">В названии есть скрытое имя «'+esc(lk.word)+'» ('+esc(lk.name)+'). Пока не задано название для игроков, они видят эти статьи без группы.</p>':"")+
+    '<p class="hint" style="margin:0">Группы видите только вы: у игроков статьи раздела идут списком по алфавиту.</p>'+
     '<label class="qa-l">Раздел вики<select id="grp-c">'+CATS.map(([c,n])=>'<option value="'+c+'"'+(c===cat?" selected":"")+">"+esc(n)+"</option>").join("")+'</select></label>'+
     '<div class="qa-foot"><button class="btn pri" data-act="grpsave" data-c="'+cat+'" data-g="'+esc(g)+'">Сохранить</button><button class="btn" data-act="grpclose">Отмена</button><span style="flex:1"></span><button class="btn" data-act="grpdissolve" data-c="'+cat+'" data-g="'+esc(g)+'" title="Статьи останутся, просто без группы">Расформировать</button></div></div>';
   m.hidden=false;setTimeout(()=>$("#grp-n")?.focus(),30);
 }
 function saveGroup(cat,g,dissolve){
-  const n=dissolve?"":($("#grp-n").value.trim()),pg=dissolve?"":$("#grp-p").value.trim(),c=dissolve?cat:$("#grp-c").value;
+  const n=dissolve?"":($("#grp-n").value.trim()),c=dissolve?cat:$("#grp-c").value;
   const mem=[...S.arts.values()].filter(x=>x.cat===cat&&x.group===g);
-  for(const x of mem){const b=clone(x);b.group=n;b.cat=c;if(pg) b.pgroup=pg;else delete b.pgroup;saveArt(b,null,{noUndo:true})}
+  for(const x of mem){const b=clone(x);b.group=n;b.cat=c;delete b.pgroup;saveArt(b,null,{noUndo:true})}
   $("#qadd-modal").hidden=true;toast(dissolve?"Группа расформирована.":"Группа обновлена: "+mem.length+" "+plural(mem.length,"статья","статьи","статей")+".");
 }
 function scanLeaks(){
@@ -1100,8 +1094,6 @@ function scanLeaks(){
   for(const a of sortArts([...S.arts.values()])){
     if(!vis.has(a.id)) continue;
     const p=pubOf(a,vis,S.arts);
-    if(a.group&&!a.pgroup&&!p.group) chk(auto,a,"Группа (у игроков — без группы)",a.group);
-    if(a.pgroup) chk(fix,a,"Группа для игроков",a.pgroup);
     for(const s of a.sections){
       if(!s.items.some(i=>i.o)) continue;
       if(!s.ph&&!pubHead(s,T)) chk(auto,a,"Заголовок раздела (у игроков — без заголовка)",s.h);
@@ -1124,7 +1116,7 @@ function leaksView(){
   let h='<div class="page"><div class="crumb">Только для мастера</div><h1 class="title">Проверка утечек</h1><p class="hint">Ищу в том, что видят игроки, скрытые имена: имена скрытых статей и закрытые псевдонимы открытых. Склонения учитываются по началу слова, поэтому возможны ложные срабатывания.</p>';
   h+='<h2>Нужно поправить <span class="hint mono">'+fix.length+"</span></h2>";
   h+=fix.length?fix.map(row).join(""):'<p class="hint">Ничего не нашлось — игроки не видят скрытых имён.</p>';
-  h+='<h2>Скрыто автоматически <span class="hint mono">'+auto.length+'</span></h2><p class="hint">Группы и заголовки разделов со скрытым именем игроки видят без названия. Чтобы показать им другое название, нажмите карандаш у группы в оглавлении или у заголовка раздела и заполните поле «для игроков».</p>';
+  h+='<h2>Скрыто автоматически <span class="hint mono">'+auto.length+'</span></h2><p class="hint">Заголовки разделов со скрытым именем игроки видят без названия. Чтобы показать им другое, нажмите карандаш у заголовка и заполните поле «для игроков».</p>';
   h+=auto.map(row).join("");
   const ig=(S.tl.leakIgnore||[]);if(ig.length) h+='<p class="hint" style="margin-top:24px">Не считаются утечкой: '+ig.map(x=>esc(x)+"…").join(", ")+' · <button class="textbtn" data-act="leakreset">вернуть все</button></p>';
   return h+"</div>";
@@ -1232,7 +1224,7 @@ function commitEdit(){
   else if(E.kind==="title"){a.names[0].t=val||a.names[0].t}
   else if(E.kind==="sec"){const sc=a.sections.find(s=>s.id===E.q);sc.h=val||"Без названия";const ph=($("#ed2")?.value||"").trim();if(ph) sc.ph=ph;else delete sc.ph}
   else if(E.kind==="cap"){a.images.find(i=>i.id===E.q).cap=val}
-  else if(E.kind==="cat"){a.cat=$("#ed").value;a.group=($("#ed2")?.value||"").trim();const pg=($("#ed3")?.value||"").trim();if(pg) a.pgroup=pg;else delete a.pgroup}
+  else if(E.kind==="cat"){a.cat=$("#ed").value;a.group=($("#ed2")?.value||"").trim();delete a.pgroup}
   S.edit=null;S.pick=null;saveArt(a,prev,{noUndo:true});
 }
 function createArt(){
