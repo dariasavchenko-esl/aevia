@@ -955,9 +955,17 @@ function dateBlock(e){
   else zs=ap+zLabel(e.zf);
   return "<b>"+esc(dr)+"</b><i>"+esc(zs)+"</i>"+(e.day?"<em>"+esc(e.day)+"</em>":"");
 }
+const MONTHS=[/хаммер|молот/,/алтуриак/,/чес/,/тарсах|тарсак/,/миртул/,/киторн/,/флеймрул|пламен/,/элеасис/,/элейнт/,/марпенот/,/уктар/,/найтал/];
+function tlSorted(evs){
+  const ei=e=>{const k=ERAS.indexOf(e.era);return k<0?ERAS.length:k};
+  const mi=e=>{const d=String(e.day||"").toLowerCase();const k=MONTHS.findIndex(r=>r.test(d));return k<0?-1:k};
+  const di=e=>{const m=String(e.day||"").match(/\d+/);return m?+m[0]:0};
+  return evs.map((e,i)=>({e,i})).sort((x,y)=>{const a=x.e,b=y.e;
+    return ei(a)-ei(b)||((a.zf??1e9)-(b.zf??1e9))||(mi(a)-mi(b))||(di(a)-di(b))||(x.i-y.i)}).map(x=>x.e);
+}
 function timelineView(D){
   const gm=D.gm;
-  let ev=(D.tl.events||[]).slice();
+  let ev=tlSorted((D.tl.events||[]).slice());
   const eras=[...new Set([...ERAS,...ev.map(e=>e.era)])].filter(x=>ev.some(e=>e.era===x));
   let h='<div class="page"><div class="crumb">ДС = СЗ + 1516</div><h1 class="title">Хронология</h1>';
   h+='<div class="tl-filters"><button class="fchip" data-act="eraf" data-v="" aria-pressed="'+(!S.eraF)+'">Все эпохи</button>'+eras.map(x=>'<button class="fchip" data-act="eraf" data-v="'+esc(x)+'" aria-pressed="'+(S.eraF===x)+'">'+esc(x)+"</button>").join("");
@@ -1467,6 +1475,29 @@ async function importOps(ops){
         else{if(findIt(a,o.item.id)) continue;const sec=a.sections.find(x=>x.id===o.sec)||a.sections[a.sections.length-1];if(!sec) continue;sec.items.push(clone(o.item))}
         a.updated=Date.now();S.arts.set(id,a);touched.add(id);fixed++;await S.db.collection("gm").doc(id).set(a);continue;
       }
+      if(o.op==="splitev"){
+        // {id, parts:[текст | {t, zf, zt, day}]}: событие становится несколькими; видимость и эпоха копируются
+        const evs=S.tl.events||[];const k=evs.findIndex(x=>x.id===o.id);if(k<0){skipped++;continue}
+        const e=evs[k];const L=t=>plain(String(t||"")).toLowerCase().replace(/[^a-zа-яё0-9]/g,"");
+        const parts=o.parts.map(x=>typeof x==="string"?{t:x}:x);
+        let use=parts;
+        if(o.check!==false&&L(e.t)!==L(parts.map(x=>x.t).join(" "))&&!(o.alt&&L(e.t)===L(o.alt))){
+          // текст менялся с тех пор — режу то, что есть сейчас, по «;» вне скобок и кавычек
+          const segs=[];let cur="",depth=0;
+          for(const ch of String(e.t)){if("([«".includes(ch)) depth++;else if(")]»".includes(ch)) depth=Math.max(0,depth-1);
+            if(ch===";"&&depth===0){segs.push(cur);cur=""}else cur+=ch}
+          segs.push(cur);
+          const cap=t=>{t=t.trim();const m=t.match(/^(\[\[[a-z0-9_]+\|)?(.)/);if(!m) return t;const k=(m[1]||"").length;return t.slice(0,k)+t[k].toUpperCase()+t.slice(k+1)};
+          const fin=t=>/[.!?…»)]$/.test(t)?t:t+".";
+          const share={};for(const f of ["zf","zt","day"]) if(f in parts[0]) share[f]=parts[0][f];
+          use=segs.map(x=>x.trim()).filter(Boolean).map(t=>({...share,t:fin(cap(t))}));
+          if(use.length===parts.length) use=use.map((x,n)=>({...parts[n],t:x.t}));
+          S._splitAuto=(S._splitAuto||0)+1;
+        }
+        const fresh=use.map((x,n)=>{const c=n===0?e:{...clone(e),id:e.id+"-"+(n+1)};c.t=x.t;for(const f of ["zf","zt","day"]) if(f in x) c[f]=x[f];c.ord=(e.ord||0)+n*0.001;return c});
+        evs.splice(k,1,...fresh);S.tl.events=evs;tlTouched=true;fixed++;
+        await S.db.collection("gm").doc("_timeline").set(S.tl);continue;
+      }
       if(o.op==="event"){
         const e=(S.tl.events||[]).find(x=>x.id===o.id);if(!e) continue;Object.assign(e,o.set);tlTouched=true;fixed++;
         await S.db.collection("gm").doc("_timeline").set(S.tl);continue;
@@ -1499,7 +1530,7 @@ async function importOps(ops){
     }
   });
   render();
-  toast("Импорт: новых статей — "+added+", дополнено — "+ext+", событий — "+ev+", исправлений — "+fixed+(skipped?", пропущено (уже есть) — "+skipped:"")+".");
+  toast("Импорт: новых статей — "+added+", дополнено — "+ext+", событий — "+ev+", исправлений — "+fixed+(skipped?", пропущено (уже есть) — "+skipped:"")+"."+(S._splitAuto?" Событий, которые вы успели поправить, — "+S._splitAuto+": их я разрезала по «;» как есть, проверьте.":""));S._splitAuto=null;
 }
 $("#file").addEventListener("change",async e=>{
   const f=e.target.files[0];const aid=S.uploadFor;if(!f||!aid||!S.assets) return;
