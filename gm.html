@@ -220,7 +220,10 @@ mark{background:var(--verd-soft);color:inherit;border-radius:2px;padding:0 1px}
 
 .qadd-btn{flex:none;border-radius:999px;font-size:13px;padding:6px 12px}
 .galwall{columns:240px auto;column-gap:16px;margin-top:10px}
-.galh{margin-top:28px}
+.galh{margin-top:28px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.galtools{display:inline-flex;gap:2px;margin-left:4px;opacity:.6}.galh:hover .galtools,.galtools:focus-within{opacity:1}
+.galedit input,.galadd input{font:inherit;font-size:16px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);min-width:220px}
+.galadd{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}
 .page.page-wide{max-width:min(1400px,100%)}
 .gal{break-inside:avoid;margin:0 0 16px;background:var(--sheet);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:block;width:100%;max-width:none}
 .gal .galsel{font:inherit;font-size:12px;padding:2px 4px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--muted);justify-self:start}
@@ -690,7 +693,7 @@ function pubOf(a,vis,arts){
     sections:a.sections.map(s=>({id:s.id,h:pubHead(s,T),items:s.items.filter(i=>i.o).map(i=>i.table?{id:i.id,table:i.table,o:true,ot:i.ot||0}:{id:i.id,t:tx(i.t),o:true,ot:i.ot||0})})).filter(s=>s.items.length),
     images:(a.images||[]).filter(i=>i.o).map(i=>({id:i.id,asset:i.asset,gal:galCat(a,i),cap:tx(i.cap||""),o:true}))};
 }
-function pubTimeline(tl,vis,arts){return {events:(tl.events||[]).filter(e=>e.o).map(e=>({...e,t:linkFilter(e.t,vis,arts)}))}}
+function pubTimeline(tl,vis,arts){return {events:(tl.events||[]).filter(e=>e.o).map(e=>({...e,t:linkFilter(e.t,vis,arts)})),galCats:galCats(tl)}}
 function view(){
   if(S.mode==="gm"&&!S.preview) return {arts:S.arts,tl:S.tl,gm:true};
   if(S.mode==="gm"){const vis=visSet(S.arts);const m=new Map();for(const a of S.arts.values()){const p=pubOf(a,vis,S.arts);if(p)m.set(a.id,p)}return {arts:m,tl:pubTimeline(S.tl,vis,S.arts),gm:false}}
@@ -1186,31 +1189,51 @@ function inboxAdd(card,open){
   else{sec=a.sections[0];if(!sec){sec={id:a.id+"-s"+uid(),h:"Факты",items:[]};a.sections.push(sec)}sec.items.push(item)}
   saveArt(a,a0);inboxMark(id,"a");toast("Добавлено в «"+title(a,true)+"»"+(open?" и открыто игрокам.":" скрытым фактом."));
 }
-const GALCATS=[["people","Персонажи"],["items","Предметы"],["other","Остальное"]];
+const GAL_DEF=["Персонажи","Предметы","Остальное"];const GAL_OLD={people:"Персонажи",items:"Предметы",other:"Остальное"};
 const GAL_ITEMS=new Set(["items","arcanum","aldzhununziez","flerdekelosc9","saltpeter"]);
-function galCat(a,im){if(im.gal) return im.gal;if(a.cat==="people") return "people";if(GAL_ITEMS.has(a.id)) return "items";return "other"}
+function galCats(tl){const c=(tl||S.tl||{}).galCats;return Array.isArray(c)&&c.length?c:GAL_DEF}
+function galCat(a,im,tl){
+  const cats=galCats(tl||S.tl);const g=GAL_OLD[im.gal]||im.gal;if(g&&cats.includes(g)) return g;
+  const want=a.cat==="people"?"Персонажи":GAL_ITEMS.has(a.id)?"Предметы":"Остальное";
+  return cats.includes(want)?want:cats[cats.length-1];
+}
+function galSetMany(pairs,to){
+  // pairs: [{a,im}] из S.arts — записать im.gal=to
+  const by=new Map();for(const {a,im} of pairs){if(!by.has(a.id)) by.set(a.id,[]);by.get(a.id).push(im.id)}
+  for(const [aid,ids] of by){const a0=S.arts.get(aid);if(!a0) continue;const a=clone(a0);for(const im of a.images||[]) if(ids.includes(im.id)) im.gal=to;saveArt(a,a0,{noUndo:true})}
+}
+function galAll(){const r=[];for(const a of S.arts.values()) if(a.cat!=="meta") for(const im of a.images||[]) r.push({a,im,g:galCat(a,im)});return r}
 function galleryView(D){
   const gm=D.gm;const list=[];
-  for(const a of sortArts([...D.arts.values()].filter(a=>a.cat!=="meta"))) for(const im of (a.images||[])) list.push({a,im,g:galCat(a,im)});
+  const CATSG=galCats(D.tl);
+  for(const a of sortArts([...D.arts.values()].filter(a=>a.cat!=="meta"))) for(const im of (a.images||[])) list.push({a,im,g:gm?galCat(a,im):(CATSG.includes(im.gal)?im.gal:galCat(a,im,D.tl))});
   const vis=gm&&S.galF?list.filter(x=>S.galF==="open"?x.im.o:!x.im.o):list;
   const shown=S.galC?vis.filter(x=>x.g===S.galC):vis;
   let h='<div class="page page-wide"><div class="crumb">Все иллюстрации архива</div><h1 class="title">Галерея</h1>';
   h+='<p class="hint">Нажмите на картинку, чтобы перейти к статье, или на ⤢, чтобы открыть её целиком.</p>';
-  h+='<div class="tl-filters"><button class="fchip" data-act="galc" data-v="" aria-pressed="'+(!S.galC)+'">Все · '+vis.length+"</button>"+GALCATS.map(([k,n])=>'<button class="fchip" data-act="galc" data-v="'+k+'" aria-pressed="'+(S.galC===k)+'">'+n+" · "+vis.filter(x=>x.g===k).length+"</button>").join("");
+  h+='<div class="tl-filters"><button class="fchip" data-act="galc" data-v="" aria-pressed="'+(!S.galC)+'">Все · '+vis.length+"</button>"+CATSG.map(n=>'<button class="fchip" data-act="galc" data-v="'+esc(n)+'" aria-pressed="'+(S.galC===n)+'">'+esc(n)+" · "+vis.filter(x=>x.g===n).length+"</button>").join("");
   if(gm) h+='<span style="width:12px"></span>'+[["","Все"],["open","Открытые"],["closed","Скрытые"]].map(([k,n])=>'<button class="fchip" data-act="galf" data-v="'+k+'" aria-pressed="'+((S.galF||"")===k)+'">'+n+"</button>").join("");
   h+="</div>";
+  if(gm) h+='<div class="galadd"><input id="gal-new" placeholder="Новый раздел галереи" aria-label="Новый раздел галереи"><button class="btn" data-act="galadd">+ Раздел</button></div>';
   if(!shown.length) return h+'<p class="hint">Пока здесь пусто.</p></div>';
-  for(const [k,n] of GALCATS){
-    const part=shown.filter(x=>x.g===k);if(!part.length) continue;
-    h+='<h2 class="galh">'+n+' <span class="hint mono">'+part.length+'</span></h2><div class="galwall">';
+  CATSG.forEach((n,ci)=>{
+    const part=shown.filter(x=>x.g===n);if(!part.length&&!gm) return;if(S.galC&&S.galC!==n) return;
+    if(gm&&S.galEdit===n) h+='<div class="galh galedit"><input id="gal-ren" value="'+esc(n)+'" aria-label="Название раздела"><button class="btn pri" data-act="galrensave" data-v="'+esc(n)+'">Сохранить</button><button class="btn" data-act="galrencancel">Отмена</button></div>';
+    else{
+      h+='<h2 class="galh">'+esc(n)+' <span class="hint mono">'+part.length+"</span>";
+      if(gm) h+='<span class="galtools"><button class="tool" data-act="galmv" data-v="-1" data-c="'+esc(n)+'" aria-label="Раздел выше"'+(ci===0?" disabled":"")+'>↑</button><button class="tool" data-act="galmv" data-v="1" data-c="'+esc(n)+'" aria-label="Раздел ниже"'+(ci===CATSG.length-1?" disabled":"")+'>↓</button><button class="tool" data-act="galren" data-c="'+esc(n)+'" aria-label="Переименовать">'+I.pen+'</button>'+(CATSG.length>1?'<button class="tool" data-act="galdel" data-c="'+esc(n)+'" aria-label="Удалить раздел">'+I.x+"</button>":"")+"</span>";
+      h+="</h2>";
+    }
+    if(!part.length){h+='<p class="hint">Пусто — перенесите сюда картинки списком под ними.</p>';return}
+    h+='<div class="galwall">';
     for(const {a,im,g} of part){
       const src=esc(imgSrc(im.asset));const href="#a-"+a.id.replace(/_/g,"-");
       h+='<figure class="gal'+(gm&&!im.o?" closed":"")+'"><div class="gph"><a href="'+href+'"><img loading="lazy" src="'+src+'" alt="'+esc(plain(im.cap)||title(a,gm))+'"></a><button class="tool gzoom" data-act="zoom" data-src="'+src+'" aria-label="Открыть целиком" title="Открыть целиком">⤢</button>'+(gm&&!im.o?'<span class="glock" title="Скрыто от игроков">'+I.lock+"</span>":"")+'</div><figcaption>'+(im.cap?"<span>"+fmt(im.cap,D)+"</span>":"")+'<a class="gsrc" href="'+href+'">'+esc(title(a,gm))+"</a>";
-      if(gm) h+='<select class="galsel" data-galsel="'+a.id+'|'+im.id+'" aria-label="Раздел галереи">'+GALCATS.map(([kk,nn])=>'<option value="'+kk+'"'+(kk===g?" selected":"")+">"+nn+"</option>").join("")+"</select>";
+      if(gm) h+='<select class="galsel" data-galsel="'+a.id+'|'+im.id+'" aria-label="Раздел галереи">'+CATSG.map(nn=>'<option value="'+esc(nn)+'"'+(nn===g?" selected":"")+">"+esc(nn)+"</option>").join("")+"</select>";
       h+="</figcaption></figure>";
     }
     h+="</div>";
-  }
+  });
   return h+"</div>";
 }
 function moveArt(aid,dir){
@@ -1304,6 +1327,21 @@ document.addEventListener("click",e=>{
     case "leaks": $("#menu").hidden=true;location.hash="#leaks";break;
     case "galf": S.galF=b.dataset.v;renderMain();break;
     case "galc": S.galC=b.dataset.v;renderMain();break;
+    case "galadd": {const v=($("#gal-new")?.value||"").trim();const cats=galCats();if(!v){$("#gal-new")?.focus();break}if(cats.includes(v)){toast("Такой раздел уже есть.");break}
+      const prev=clone(S.tl);S.tl.galCats=[...cats,v];saveTl(prev);
+      toast("Раздел «"+v+"» добавлен — переносите в него картинки списком под ними.");break}
+    case "galren": S.galEdit=b.dataset.c;renderMain();setTimeout(()=>$("#gal-ren")?.focus(),30);break;
+    case "galrencancel": S.galEdit=null;renderMain();break;
+    case "galrensave": {const old=b.dataset.v,v=($("#gal-ren")?.value||"").trim();const cats=galCats();S.galEdit=null;
+      if(!v||v===old){renderMain();break}if(cats.includes(v)){toast("Такой раздел уже есть.");renderMain();break}
+      const moved=galAll().filter(x=>x.g===old);const prev=clone(S.tl);S.tl.galCats=cats.map(c=>c===old?v:c);saveTl(prev);galSetMany(moved,v);if(S.galC===old) S.galC=v;toast("Раздел переименован.");break}
+    case "galdel": {const n=b.dataset.c;const cats=galCats();if(cats.length<2) break;const rest=cats.filter(c=>c!==n);const to=rest.includes("Остальное")?"Остальное":rest[rest.length-1];
+      const all=galAll();const prev=clone(S.tl);S.tl.galCats=rest;saveTl(prev);
+      // закрепляю разделы всех картинок: удалённого — в «to», остальных — как были
+      const by=new Map();for(const x of all){if(!by.has(x.a.id)) by.set(x.a.id,new Map());by.get(x.a.id).set(x.im.id,x.g===n?to:x.g)}
+      for(const [aid,mm] of by){const a0=S.arts.get(aid);if(!a0) continue;const a=clone(a0);let ch=false;for(const im of a.images||[]){const v=mm.get(im.id);if(v&&im.gal!==v){im.gal=v;ch=true}}if(ch) saveArt(a,a0,{noUndo:true})}
+      if(S.galC===n) S.galC="";toast("Раздел «"+n+"» удалён; его картинки — в «"+to+"».");break}
+    case "galmv": {const n=b.dataset.c,d=Number(b.dataset.v);const cats=[...galCats()];const k=cats.indexOf(n),j=k+d;if(j<0||j>=cats.length) break;[cats[k],cats[j]]=[cats[j],cats[k]];const prev=clone(S.tl);S.tl.galCats=cats;saveTl(prev);break}
     case "inbox": $("#menu").hidden=true;location.hash="#inbox";break;
     case "sugg": openSuggest(aid);break;
     case "sgsend": sendSuggest(aid);break;
@@ -1780,7 +1818,7 @@ document.addEventListener("input",e=>{
 document.addEventListener("change",e=>{
   const g=e.target.closest&&e.target.closest("[data-galsel]");if(!g) return;
   const [aid,iid]=g.dataset.galsel.split("|");const a0=S.arts.get(aid);if(!a0) return;
-  const a=clone(a0);const im=(a.images||[]).find(x=>x.id===iid);if(!im) return;im.gal=g.value;saveArt(a,a0);toast("Картинка перенесена в «"+GALCATS.find(x=>x[0]===g.value)[1]+"».");
+  const a=clone(a0);const im=(a.images||[]).find(x=>x.id===iid);if(!im) return;im.gal=g.value;saveArt(a,a0);toast("Картинка перенесена в «"+g.value+"».");
 });
 document.addEventListener("change",e=>{if(["qa-race","qa-gender","qa-sur"].includes(e.target.id)){qaReadOpts();if(Q.variants.length){Q.variants=genNames(Q.race,Q.gender,Q.surname);renderQuick(qaVals())}}});
 document.addEventListener("keydown",e=>{
