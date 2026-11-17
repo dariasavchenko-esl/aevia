@@ -956,12 +956,12 @@ function dateBlock(e){
   return "<b>"+esc(dr)+"</b><i>"+esc(zs)+"</i>"+(e.day?"<em>"+esc(e.day)+"</em>":"");
 }
 const MONTHS=[/хаммер|молот/,/алтуриак/,/чес/,/тарсах|тарсак/,/миртул/,/киторн/,/флеймрул|пламен/,/элеасис/,/элейнт/,/марпенот/,/уктар/,/найтал/];
+function tlKey(e){
+  const k=ERAS.indexOf(e.era);const d=String(e.day||"").toLowerCase();const mk=MONTHS.findIndex(r=>r.test(d));const dm=d.match(/\d+/);
+  return [k<0?ERAS.length:k,e.zf??1e9,mk,dm?+dm[0]:0];
+}
 function tlSorted(evs){
-  const ei=e=>{const k=ERAS.indexOf(e.era);return k<0?ERAS.length:k};
-  const mi=e=>{const d=String(e.day||"").toLowerCase();const k=MONTHS.findIndex(r=>r.test(d));return k<0?-1:k};
-  const di=e=>{const m=String(e.day||"").match(/\d+/);return m?+m[0]:0};
-  return evs.map((e,i)=>({e,i})).sort((x,y)=>{const a=x.e,b=y.e;
-    return ei(a)-ei(b)||((a.zf??1e9)-(b.zf??1e9))||(mi(a)-mi(b))||(di(a)-di(b))||(x.i-y.i)}).map(x=>x.e);
+  return evs.map((e,i)=>({e,i,k:tlKey(e)})).sort((x,y)=>x.k[0]-y.k[0]||x.k[1]-y.k[1]||x.k[2]-y.k[2]||x.k[3]-y.k[3]||x.i-y.i).map(x=>x.e);
 }
 function timelineView(D){
   const gm=D.gm;
@@ -986,7 +986,7 @@ function timelineView(D){
       h+='<div class="editor"><div class="evform"><label>С года СЗ<input id="ev-zf" type="number" value="'+(e.zf??"")+'"></label><label>По год СЗ<input id="ev-zt" type="number" value="'+(e.zt??"")+'"></label><label>День, месяц<input id="ev-day" value="'+esc(e.day||"")+'"></label><label>Эпоха<select id="ev-era">'+[...new Set([...ERAS,...(e.era&&!ERAS.includes(e.era)?[e.era]:[])])].map(x=>'<option'+(x===(e.era||"")?" selected":"")+">"+esc(x)+"</option>").join("")+'</select></label><label style="flex-direction:row;display:flex;gap:6px;align-items:center"><input id="ev-ap" type="checkbox"'+(e.ap?" checked":"")+'> приблизительно</label></div><datalist id="eras">'+ERAS.map(x=>'<option value="'+esc(x)+'">').join("")+'</datalist><span class="hint">Годы до Заветов: 0 = 1516 ДС, −1 = 1515 ДС.</span>'+editorHtml(e.t,"").replace('<div class="editor">',"").replace(/<\/div>$/,"")+"</div>";
       h+="<div></div>";
     } else {
-      h+='<div class="qt">'+fmt(e.t,D)+'</div><div class="qtools"><button class="tool" data-act="ee" '+attrs+' aria-label="Изменить">'+I.pen+'</button><button class="tool" data-act="de" '+attrs+' aria-label="Удалить">'+I.x+"</button></div>";
+      h+='<div class="qt">'+fmt(e.t,D)+'</div><div class="qtools"><button class="tool" data-act="evmv" data-v="-1" '+attrs+' aria-label="Выше" title="Выше">↑</button><button class="tool" data-act="evmv" data-v="1" '+attrs+' aria-label="Ниже" title="Ниже">↓</button><button class="tool" data-act="ee" '+attrs+' aria-label="Изменить">'+I.pen+'</button><button class="tool" data-act="de" '+attrs+' aria-label="Удалить">'+I.x+"</button></div>";
     }
     h+="</div></div>";
   }
@@ -1291,6 +1291,13 @@ document.addEventListener("click",e=>{
     case "cancelnew": S.newArt=false;render();break;
     case "createart": createArt();break;
     case "te": {const prev=clone(S.tl);const ev=S.tl.events.find(x=>x.id===qid);ev.o=!ev.o;if(ev.o) ev.ot=Date.now();saveTl(prev);break}
+    case "evmv": {
+      // меняю местами с соседом по хронологии; если у соседа другая дата — сортировка вернёт как было, поэтому подсказываю
+      const evs=S.tl.events||[];const sorted=tlSorted(evs.slice());const k=sorted.findIndex(x=>x.id===qid),j=k+Number(b.dataset.v);
+      if(j<0||j>=sorted.length) break;
+      const A=sorted[k],B=sorted[j];const same=JSON.stringify(tlKey(A))===JSON.stringify(tlKey(B));
+      if(!same){toast("Рядом событие с другой датой — чтобы поставить его "+(j<k?"выше":"ниже")+", поменяйте год или день.");break}
+      const prev=clone(S.tl);const ia=evs.indexOf(A),ib=evs.indexOf(B);evs[ia]=B;evs[ib]=A;S.tl.events=evs;saveTl(prev);break}
     case "de": {const prev=clone(S.tl);S.tl.events=S.tl.events.filter(x=>x.id!==qid);saveTl(prev);toastUndo("Событие удалено.");break}
     case "ae": {const prev=clone(S.tl);const id="tl"+uid();S.tl.events.push({id,zf:325,zt:null,ap:false,day:"",era:"Кампания",o:false,t:""});S.edit={kind:"ev",q:id};saveTl(prev);focusEd();break}
     case "eraf": S.eraF=b.dataset.v||null;renderMain();break;
