@@ -250,6 +250,14 @@ mark{background:var(--verd-soft);color:inherit;border-radius:2px;padding:0 1px}
 .gal figcaption{padding:10px 12px;font-size:14px;line-height:1.45;display:grid;gap:4px}
 .gal .gsrc{font:500 12px/1.3 var(--f-mono);color:var(--muted);text-decoration:none}
 .gal .gsrc:hover{color:var(--ink);text-decoration:underline}
+.hist-box{width:min(720px,100%);max-height:calc(100vh - 40px);overflow:auto}
+.hist-list{display:grid;gap:4px;max-height:60vh;overflow:auto}
+.hist-row{display:flex;justify-content:space-between;gap:12px;text-align:left;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--sheet)}
+.hist-row:hover{border-color:var(--verd)}
+.hist-view{max-height:58vh;overflow:auto;display:grid;gap:4px;font-size:14px}
+.hv{padding:4px 8px;border-radius:6px}
+.hv.back{background:var(--verd-soft)}.hv.chg{background:var(--gold-soft)}
+.hvtag{font:600 11px/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;margin-right:8px;color:var(--muted)}
 .suggest{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:28px;padding-top:14px;border-top:1px solid var(--line)}
 .inbox-card{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0;background:var(--sheet);display:grid;gap:8px}
 .inbox-card.done{opacity:.6}
@@ -673,7 +681,21 @@ function mountUi(){
   document.head.appendChild(css);
   status();
 }
-window.__gh={mode:MODE,sync:()=>MODE==="gm"?syncGm():syncPlayer(false),settings:openSettings,cfg:CFG};
+/* история версий архива: каждая синхронизация мастера — коммит data/gm.json в закрытом репозитории */
+const verCache={};
+async function history(){
+  if(!token()) throw Object.assign(new Error("no token"),{status:401});
+  const r=await gh(`/repos/${CFG.owner}/${CFG.gmRepo}/commits?path=${CFG.gmPath}&sha=${CFG.branch}&per_page=60`);
+  if(!r.ok) throw httpErr(r);
+  return (await r.json()).map(c=>({sha:c.sha,date:c.commit.committer.date||c.commit.author.date,msg:c.commit.message}));
+}
+async function versionAt(sha){
+  if(verCache[sha]) return verCache[sha];
+  const r=await gh(`/repos/${CFG.owner}/${CFG.gmRepo}/contents/${CFG.gmPath}?ref=${sha}`,{},true);
+  if(!r.ok) throw httpErr(r);
+  const j=await r.json();return verCache[sha]=(j.docs||{});
+}
+window.__gh={mode:MODE,sync:()=>MODE==="gm"?syncGm():syncPlayer(false),settings:openSettings,cfg:CFG,history,versionAt,errText,isDirty:()=>st.dirty};
 document.addEventListener("DOMContentLoaded",()=>{
   mountUi();
   if(MODE==="player") loaded.then(()=>syncPlayer(true));
@@ -1082,7 +1104,7 @@ function articleView(D,id){
   }
   if(!gm&&FORM.action) h+='<div class="suggest"><button class="btn" data-act="sugg" data-a="'+a.id+'">✎ Дополнить</button><span class="hint">Помните об этом больше? Напишите мастеру.</span></div>';
   if(gm){
-    h+='<div class="gmfoot"><span class="hint mono">id: '+esc(a.id)+'</span><button class="textbtn" data-act="ecat" data-a="'+a.id+'">Переместить</button><button class="textbtn danger" data-act="delart" data-a="'+a.id+'">Удалить статью</button></div>';
+    h+='<div class="gmfoot"><span class="hint mono">id: '+esc(a.id)+'</span><button class="textbtn" data-act="ecat" data-a="'+a.id+'">Переместить</button>'+(window.__gh&&window.__gh.history?'<button class="textbtn" data-act="hist" data-a="'+a.id+'">История версий</button>':"")+'<button class="textbtn danger" data-act="delart" data-a="'+a.id+'">Удалить статью</button></div>';
     if(S.edit&&S.edit.kind==="cat"&&S.edit.a===a.id){
       const allG=[...new Set([...S.arts.values()].map(x=>x.group).filter(Boolean))].sort((x,y)=>x.localeCompare(y,"ru"));
       h+='<div class="newform" style="margin-top:12px"><label>Раздел вики<select id="ed">'+CATS.map(([c,n])=>'<option value="'+c+'"'+(c===a.cat?" selected":"")+">"+esc(n)+"</option>").join("")+'</select></label><label>Группа (пусто — без группы)<input id="ed2" list="grp-list" value="'+esc(a.group||"")+'"></label><datalist id="grp-list">'+allG.map(g=>'<option value="'+esc(g)+'">').join("")+'</datalist><p class="hint" style="margin:0">Игроки групп не видят: у них статьи раздела идут списком по алфавиту.</p><div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri" data-act="save">Сохранить</button><button class="btn" data-act="cancel">Отмена</button><span style="flex:1"></span><button class="btn" data-act="mvart" data-a="'+a.id+'" data-v="-1">↑ Выше в списке</button><button class="btn" data-act="mvart" data-a="'+a.id+'" data-v="1">↓ Ниже</button></div></div>';
@@ -1362,6 +1384,47 @@ function galleryView(D){
   });
   return h+"</div>";
 }
+/* ---------- история версий статьи (GitHub-версия) ---------- */
+function itemsOf(d){if(!d) return new Map();const m=new Map();for(const n of d.names||[]) m.set(n.id,"Имя: "+n.t);if(d.lead) m.set(d.lead.id,"Описание: "+(d.lead.t||""));
+  for(const s of d.sections||[]){m.set(s.id+"#h","Раздел: "+s.h);for(const i of s.items) m.set(i.id,i.table?"Таблица: "+i.table.cols.join(" · ")+" ("+i.table.rows.length+" строк)\n"+i.table.rows.map(r=>r.join(" | ")).join("\n"):(i.t||""))}
+  for(const im of d.images||[]) m.set(im.id,"Картинка: "+(im.cap||""));return m}
+function diffDocs(cur,old){const A=itemsOf(cur),B=itemsOf(old);let back=0,gone=0,chg=0;
+  for(const [k,v] of B){if(!A.has(k)) back++;else if(A.get(k)!==v) chg++}for(const k of A.keys()) if(!B.has(k)) gone++;return {back,gone,chg}}
+async function openHistory(aid){
+  const G=window.__gh;const m=$("#qadd-modal");const a=S.arts.get(aid);const name=a?title(a,true):aid;
+  const box=(inner)=>{m.innerHTML='<div class="qa-box hist-box" role="dialog" aria-modal="true" aria-labelledby="hs-h"><div class="qa-head"><h2 id="hs-h">История: '+esc(name)+'</h2><button class="tool" data-act="hsclose" aria-label="Закрыть">'+I.x+"</button></div>"+inner+"</div>";m.hidden=false};
+  box('<p class="hint">Загружаю версии…</p>');
+  let list;try{list=await G.history()}catch(e){box('<p>Не удалось получить историю: '+esc(G.errText(e))+".</p>");return}
+  S.hist={aid,list,docs:{}};
+  let h='<p class="hint" style="margin:0">Каждая синхронизация сохраняет версию архива. Выберите версию, посмотрите, что в ней было, и восстановите статью целиком. Остальные статьи не изменятся.'+(G.isDirty()?" <b>У вас есть несинхронизированные правки</b> — самая верхняя версия ниже их ещё не содержит.":"")+'</p><div class="hist-list">';
+  list.forEach((v,k)=>{h+='<button class="hist-row" data-act="hsver" data-v="'+k+'"><span>'+esc(new Date(v.date).toLocaleString("ru-RU",{day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"}))+(k===0?" · последняя синхронизация":"")+'</span><span class="hint" id="hsd-'+k+'">…</span></button>'});
+  box(h+"</div>");
+  // посчитать отличия от текущей статьи — по несколько версий за раз
+  for(let k=0;k<list.length;k++){
+    if(!S.hist||S.hist.aid!==aid) return;
+    try{const docs=await G.versionAt(list[k].sha);const d=docs[aid];S.hist.docs[k]=d||null;const el=$("#hsd-"+k);if(!el) continue;
+      if(!d){el.textContent="статьи тогда не было";continue}const df=diffDocs(S.arts.get(aid),d);
+      el.textContent=(!df.back&&!df.gone&&!df.chg)?"как сейчас":[df.back?"вернётся "+df.back:"",df.chg?"изменено "+df.chg:"",df.gone?"нет "+df.gone+" новых":""].filter(Boolean).join(" · ")}
+    catch(e){const el=$("#hsd-"+k);if(el) el.textContent="не загрузилось"}
+  }
+}
+async function showVersion(k){
+  const H=S.hist;if(!H) return;const v=H.list[k];let d=H.docs[k];
+  if(d===undefined){try{d=(await window.__gh.versionAt(v.sha))[H.aid]||null}catch(e){toast("Не удалось загрузить версию.");return}}
+  const m=$("#qadd-modal");const cur=S.arts.get(H.aid);
+  if(!d){toast("В этой версии статьи ещё не было.");return}
+  const A=itemsOf(cur),B=itemsOf(d);
+  let body="";for(const [id,t] of B){const st=!A.has(id)?"back":A.get(id)!==t?"chg":"";body+='<div class="hv '+st+'">'+(st==="back"?'<span class="hvtag">вернётся</span>':st==="chg"?'<span class="hvtag">было так</span>':"")+esc(t).replace(/\n/g,"<br>")+"</div>"}
+  const gone=[...A.keys()].filter(id=>!B.has(id)).length;
+  m.querySelector(".qa-box").innerHTML='<div class="qa-head"><h2>'+esc(title(d,true))+' · '+esc(new Date(v.date).toLocaleString("ru-RU",{day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"}))+'</h2><button class="tool" data-act="hsclose" aria-label="Закрыть">'+I.x+'</button></div>'+
+    (gone?'<p class="hint" style="margin:0;color:var(--secret)">'+gone+" "+plural(gone,"пункт, добавленный","пункта, добавленных","пунктов, добавленных")+" позже, при восстановлении пропадёт.</p>":"")+
+    '<div class="hist-view">'+body+'</div><div class="qa-foot"><button class="btn pri" data-act="hsrestore" data-v="'+k+'">Восстановить эту версию</button><button class="btn" data-act="hsback">← К списку версий</button></div>';
+}
+function restoreVersion(k){
+  const H=S.hist;const d=H&&H.docs[k];if(!d) return;const a0=S.arts.get(H.aid)||null;
+  const b=clone(d);b.updated=Date.now();saveArt(b,a0);$("#qadd-modal").hidden=true;S.hist=null;
+  toast("Статья восстановлена. Не забудьте синхронизировать. Передумали — нажмите «Вернуть».");
+}
 function moveArt(aid,dir){
   const a=S.arts.get(aid);if(!a) return;
   const sib=sortArts([...S.arts.values()].filter(x=>x.cat===a.cat&&(x.group||"")===(a.group||"")));
@@ -1459,6 +1522,11 @@ document.addEventListener("click",e=>{
     case "leaks": $("#menu").hidden=true;location.hash="#leaks";break;
     case "galf": S.galF=b.dataset.v;renderMain();break;
     case "galc": S.galC=b.dataset.v;renderMain();break;
+    case "hist": openHistory(aid);break;
+    case "hsclose": $("#qadd-modal").hidden=true;S.hist=null;break;
+    case "hsver": showVersion(Number(b.dataset.v));break;
+    case "hsback": if(S.hist) openHistory(S.hist.aid);break;
+    case "hsrestore": restoreVersion(Number(b.dataset.v));break;
     case "galadd": {const v=($("#gal-new")?.value||"").trim();const cats=galCats();if(!v){$("#gal-new")?.focus();break}if(cats.includes(v)){toast("Такой раздел уже есть.");break}
       const prev=clone(S.tl);S.tl.galCats=[...cats,v];saveTl(prev);
       toast("Раздел «"+v+"» добавлен — переносите в него картинки списком под ними.");break}
@@ -2008,7 +2076,7 @@ function glossaryView(D){
   const gm=D.gm;
   h+='<p class="hint" style="margin:0 0 10px">'+(gm?"Правьте прямо в таблице — сохраняется само, когда уходите из ячейки. Пустой перевод = ещё не переведено. Глаз — показать строку игрокам.":"Переводы названий мира.")+'</p>';
   h+='<div class="gl-tools"><label class="sr" for="glq">Найти</label><input id="glq" placeholder="Найти название…" value="'+esc(S.glq||"")+'">'+
-     (gm?'<label class="qa-chk"><input type="checkbox" id="glmiss"'+(S.glmiss?" checked":"")+'> только без перевода</label>':"")+"</div>";
+     (gm?'<label class="qa-chk"><input type="checkbox" id="glmiss"'+(S.glmiss?" checked":"")+'> только без перевода</label>'+(window.__gh&&window.__gh.history?'<button class="btn" data-act="hist" data-a="'+GLOSS_ID+'">История версий</button>':""):"")+"</div>";
   a.sections.forEach((sec,si)=>{
     if(/^как пользоваться/i.test(sec.h)) return;
     const rows=sec.items.filter(i=>!i.table);
