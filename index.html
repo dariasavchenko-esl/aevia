@@ -219,8 +219,11 @@ figure.img figcaption span{flex:1;min-width:0}
 mark{background:var(--verd-soft);color:inherit;border-radius:2px;padding:0 1px}
 
 .qadd-btn{flex:none;border-radius:999px;font-size:13px;padding:6px 12px}
-.gallery{columns:260px auto;column-gap:18px;margin-top:18px}
-.gal{break-inside:avoid;margin:0 0 18px;background:var(--sheet);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:inline-block;width:100%}
+.galwall{columns:240px auto;column-gap:16px;margin-top:10px}
+.galh{margin-top:28px}
+.page.page-wide{max-width:min(1400px,100%)}
+.gal{break-inside:avoid;margin:0 0 16px;background:var(--sheet);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:block;width:100%;max-width:none}
+.gal .galsel{font:inherit;font-size:12px;padding:2px 4px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--muted);justify-self:start}
 .gal .gph{position:relative;background:var(--paper)}
 .gal img{display:block;width:100%;height:auto}
 .gal .gzoom{position:absolute;top:8px;right:8px;background:var(--sheet);opacity:0;transition:opacity .15s}
@@ -685,7 +688,7 @@ function pubOf(a,vis,arts){
     names:a.names.filter(n=>n.o).map(n=>({id:n.id,t:n.t,o:true})),
     lead:a.lead&&a.lead.o?{id:a.lead.id,t:tx(a.lead.t),o:true,ot:a.lead.ot||0}:null,
     sections:a.sections.map(s=>({id:s.id,h:pubHead(s,T),items:s.items.filter(i=>i.o).map(i=>i.table?{id:i.id,table:i.table,o:true,ot:i.ot||0}:{id:i.id,t:tx(i.t),o:true,ot:i.ot||0})})).filter(s=>s.items.length),
-    images:(a.images||[]).filter(i=>i.o).map(i=>({id:i.id,asset:i.asset,cap:tx(i.cap||""),o:true}))};
+    images:(a.images||[]).filter(i=>i.o).map(i=>({id:i.id,asset:i.asset,gal:galCat(a,i),cap:tx(i.cap||""),o:true}))};
 }
 function pubTimeline(tl,vis,arts){return {events:(tl.events||[]).filter(e=>e.o).map(e=>({...e,t:linkFilter(e.t,vis,arts)}))}}
 function view(){
@@ -1183,20 +1186,32 @@ function inboxAdd(card,open){
   else{sec=a.sections[0];if(!sec){sec={id:a.id+"-s"+uid(),h:"Факты",items:[]};a.sections.push(sec)}sec.items.push(item)}
   saveArt(a,a0);inboxMark(id,"a");toast("Добавлено в «"+title(a,true)+"»"+(open?" и открыто игрокам.":" скрытым фактом."));
 }
+const GALCATS=[["people","Персонажи"],["items","Предметы"],["other","Остальное"]];
+const GAL_ITEMS=new Set(["items","arcanum","aldzhununziez","flerdekelosc9","saltpeter"]);
+function galCat(a,im){if(im.gal) return im.gal;if(a.cat==="people") return "people";if(GAL_ITEMS.has(a.id)) return "items";return "other"}
 function galleryView(D){
   const gm=D.gm;const list=[];
-  for(const a of sortArts([...D.arts.values()].filter(a=>a.cat!=="meta"))) for(const im of (a.images||[])) list.push({a,im});
-  const shown=gm&&S.galF?list.filter(x=>S.galF==="open"?x.im.o:!x.im.o):list;
-  let h='<div class="page"><div class="crumb">Все иллюстрации архива</div><h1 class="title">Галерея</h1>';
-  h+='<p class="hint">'+shown.length+" "+plural(shown.length,"изображение","изображения","изображений")+'. Нажмите на картинку, чтобы перейти к статье, или на ⤢, чтобы открыть её целиком.</p>';
-  if(gm) h+='<div class="tl-filters">'+[["","Все"],["open","Открытые"],["closed","Скрытые"]].map(([k,n])=>'<button class="fchip" data-act="galf" data-v="'+k+'" aria-pressed="'+((S.galF||"")===k)+'">'+n+"</button>").join("")+"</div>";
+  for(const a of sortArts([...D.arts.values()].filter(a=>a.cat!=="meta"))) for(const im of (a.images||[])) list.push({a,im,g:galCat(a,im)});
+  const vis=gm&&S.galF?list.filter(x=>S.galF==="open"?x.im.o:!x.im.o):list;
+  const shown=S.galC?vis.filter(x=>x.g===S.galC):vis;
+  let h='<div class="page page-wide"><div class="crumb">Все иллюстрации архива</div><h1 class="title">Галерея</h1>';
+  h+='<p class="hint">Нажмите на картинку, чтобы перейти к статье, или на ⤢, чтобы открыть её целиком.</p>';
+  h+='<div class="tl-filters"><button class="fchip" data-act="galc" data-v="" aria-pressed="'+(!S.galC)+'">Все · '+vis.length+"</button>"+GALCATS.map(([k,n])=>'<button class="fchip" data-act="galc" data-v="'+k+'" aria-pressed="'+(S.galC===k)+'">'+n+" · "+vis.filter(x=>x.g===k).length+"</button>").join("");
+  if(gm) h+='<span style="width:12px"></span>'+[["","Все"],["open","Открытые"],["closed","Скрытые"]].map(([k,n])=>'<button class="fchip" data-act="galf" data-v="'+k+'" aria-pressed="'+((S.galF||"")===k)+'">'+n+"</button>").join("");
+  h+="</div>";
   if(!shown.length) return h+'<p class="hint">Пока здесь пусто.</p></div>';
-  h+='<div class="gallery">';
-  for(const {a,im} of shown){
-    const src=esc(imgSrc(im.asset));const href="#a-"+a.id.replace(/_/g,"-");
-    h+='<figure class="gal'+(gm&&!im.o?" closed":"")+'"><div class="gph"><a href="'+href+'"><img loading="lazy" src="'+src+'" alt="'+esc(plain(im.cap)||title(a,gm))+'"></a><button class="tool gzoom" data-act="zoom" data-src="'+src+'" aria-label="Открыть целиком" title="Открыть целиком">⤢</button>'+(gm&&!im.o?'<span class="glock" title="Скрыто от игроков">'+I.lock+"</span>":"")+'</div><figcaption>'+(im.cap?"<span>"+fmt(im.cap,D)+"</span>":"")+'<a class="gsrc" href="'+href+'">'+esc(title(a,gm))+"</a></figcaption></figure>";
+  for(const [k,n] of GALCATS){
+    const part=shown.filter(x=>x.g===k);if(!part.length) continue;
+    h+='<h2 class="galh">'+n+' <span class="hint mono">'+part.length+'</span></h2><div class="galwall">';
+    for(const {a,im,g} of part){
+      const src=esc(imgSrc(im.asset));const href="#a-"+a.id.replace(/_/g,"-");
+      h+='<figure class="gal'+(gm&&!im.o?" closed":"")+'"><div class="gph"><a href="'+href+'"><img loading="lazy" src="'+src+'" alt="'+esc(plain(im.cap)||title(a,gm))+'"></a><button class="tool gzoom" data-act="zoom" data-src="'+src+'" aria-label="Открыть целиком" title="Открыть целиком">⤢</button>'+(gm&&!im.o?'<span class="glock" title="Скрыто от игроков">'+I.lock+"</span>":"")+'</div><figcaption>'+(im.cap?"<span>"+fmt(im.cap,D)+"</span>":"")+'<a class="gsrc" href="'+href+'">'+esc(title(a,gm))+"</a>";
+      if(gm) h+='<select class="galsel" data-galsel="'+a.id+'|'+im.id+'" aria-label="Раздел галереи">'+GALCATS.map(([kk,nn])=>'<option value="'+kk+'"'+(kk===g?" selected":"")+">"+nn+"</option>").join("")+"</select>";
+      h+="</figcaption></figure>";
+    }
+    h+="</div>";
   }
-  return h+"</div></div>";
+  return h+"</div>";
 }
 function moveArt(aid,dir){
   const a=S.arts.get(aid);if(!a) return;
@@ -1288,6 +1303,7 @@ document.addEventListener("click",e=>{
     case "egrp": openGroup(b.dataset.c,b.dataset.g);break;
     case "leaks": $("#menu").hidden=true;location.hash="#leaks";break;
     case "galf": S.galF=b.dataset.v;renderMain();break;
+    case "galc": S.galC=b.dataset.v;renderMain();break;
     case "inbox": $("#menu").hidden=true;location.hash="#inbox";break;
     case "sugg": openSuggest(aid);break;
     case "sgsend": sendSuggest(aid);break;
@@ -1760,6 +1776,11 @@ document.addEventListener("click",e=>{
 });
 document.addEventListener("input",e=>{
   if(e.target.id==="qa-linkq"){Q.linkq=e.target.value;const keep=qaVals();const pos=e.target.selectionStart;renderQuick(keep);const el=$("#qa-linkq");el.focus();el.setSelectionRange(pos,pos)}
+});
+document.addEventListener("change",e=>{
+  const g=e.target.closest&&e.target.closest("[data-galsel]");if(!g) return;
+  const [aid,iid]=g.dataset.galsel.split("|");const a0=S.arts.get(aid);if(!a0) return;
+  const a=clone(a0);const im=(a.images||[]).find(x=>x.id===iid);if(!im) return;im.gal=g.value;saveArt(a,a0);toast("Картинка перенесена в «"+GALCATS.find(x=>x[0]===g.value)[1]+"».");
 });
 document.addEventListener("change",e=>{if(["qa-race","qa-gender","qa-sur"].includes(e.target.id)){qaReadOpts();if(Q.variants.length){Q.variants=genNames(Q.race,Q.gender,Q.surname);renderQuick(qaVals())}}});
 document.addEventListener("keydown",e=>{
