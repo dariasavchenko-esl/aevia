@@ -144,7 +144,11 @@ figure.img figcaption{font-size:12px;color:var(--muted);padding:6px 8px;display:
 figure.img figcaption span{flex:1;min-width:0}
 [hidden]{display:none!important}
 .lightbox{position:fixed;inset:0;z-index:60;background:rgba(10,12,16,.82);display:grid;place-items:center;padding:24px}
-.lightbox img{max-width:100%;max-height:100%;border-radius:6px;background:#fff}
+.lightbox img{max-width:calc(100vw - 48px);max-height:calc(100vh - 48px);object-fit:contain;border-radius:6px;background:#fff;cursor:zoom-in}
+.lightbox.full{display:block;overflow:auto;place-items:initial;-webkit-overflow-scrolling:touch}
+.lightbox.full img{max-width:none;max-height:none;margin:0 auto;display:block;cursor:zoom-out}
+.lightbox .lbx{position:fixed;top:12px;right:12px;width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:20px;display:grid;place-items:center;z-index:2}
+.lightbox .lbh{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);color:#fff;opacity:.75;font-size:13px;background:rgba(0,0,0,.45);padding:4px 10px;border-radius:999px;pointer-events:none}
 
 /* backlinks */
 .back{margin-top:40px;padding-top:14px;border-top:1px solid var(--line);font-size:14px}
@@ -371,6 +375,7 @@ section.sec>h2 .h::before{content:"";display:inline-block;width:15px;height:15px
 .gal{border-radius:120px 120px 10px 10px/70px 70px 10px 10px;border-color:color-mix(in srgb,var(--brass) 40%,var(--line));box-shadow:var(--shadow)}
 .gal .gph{border-radius:inherit;border-bottom-left-radius:0;border-bottom-right-radius:0;overflow:hidden}
 .gal figcaption{text-align:center;justify-items:center}
+.gal .gzoom{top:auto;bottom:8px;right:8px}.gal .glock{top:auto;bottom:8px;left:8px}
 .gal figcaption>span{font-family:var(--f-display);font-size:18px;font-style:italic;line-height:1.25}
 .galh{font:italic 500 32px/1.1 var(--f-display)}
 
@@ -1463,7 +1468,7 @@ document.addEventListener("click",e=>{
     case "asec": mut(a=>{const id=a.id+"-s"+uid();a.sections.push({id,h:"Новый раздел",items:[]});S.edit={kind:"sec",a:a.id,q:id}});focusEd();break;
     case "di": mut(a=>{a.images=a.images.filter(i=>i.id!==qid)});toastUndo("Иллюстрация убрана.");break;
     case "addimg": S.uploadFor=aid;$("#file").value="";$("#file").click();break;
-    case "zoom": {const lb=$("#lightbox");lb.innerHTML='<img alt="" src="'+esc(b.dataset.src)+'">';lb.hidden=false;break}
+    case "zoom": {const lb=$("#lightbox");lb.classList.remove("full");lb.innerHTML='<button class="lbx" aria-label="Закрыть">✕</button><img alt="" src="'+esc(b.dataset.src)+'"><span class="lbh">Нажмите на картинку — увеличить</span>';lb.hidden=false;break}
     case "delart": {const prev=clone(a0);S.arts.delete(aid);S.undo={type:"del",prev};location.hash="#home";render();
       queue(async()=>{await S.db.collection("gm").doc(aid).delete();await syncPub([aid,...refsTo(aid)],true)});toastUndo("Статья удалена.");break}
     case "newart": S.newArt=true;S.q="";$("#q").value="";closeSide();render();$("#na-t")?.focus();break;
@@ -1490,7 +1495,19 @@ document.addEventListener("click",e=>{
   }
 });
 document.addEventListener("error",e=>{const t=e.target;if(t&&t.tagName==="IMG"&&t.closest(".ph")){const sp=document.createElement("span");sp.className="hint";sp.textContent="Изображение недоступно";t.replaceWith(sp)}},true);
-$("#lightbox").addEventListener("click",()=>{$("#lightbox").hidden=true});
+$("#lightbox").addEventListener("click",e=>{
+  const lb=$("#lightbox");
+  // клик по картинке — переключить «целиком на экране» / «в полный размер с прокруткой»; клик мимо или по ✕ — закрыть
+  if(e.target.tagName==="IMG"){
+    const img=e.target,full=!lb.classList.contains("full");
+    if(full&&img.naturalWidth<=img.clientWidth+2&&img.naturalHeight<=img.clientHeight+2){lb.hidden=true;return}
+    const rx=(e.offsetX/img.clientWidth)||.5,ry=(e.offsetY/img.clientHeight)||.5;
+    lb.classList.toggle("full",full);const h=lb.querySelector(".lbh");if(h) h.textContent=full?"Листайте; нажмите на картинку — уменьшить":"Нажмите на картинку — увеличить";
+    if(full) requestAnimationFrame(()=>{lb.scrollLeft=img.scrollWidth*rx-lb.clientWidth/2;lb.scrollTop=img.scrollHeight*ry-lb.clientHeight/2});
+    return;
+  }
+  lb.hidden=true;lb.classList.remove("full");
+});
 function autoName(a){if(!a.names.some(n=>n.o)&&a.names[0]){a.names[0].o=true;setTimeout(()=>toast("Статья «"+a.names[0].t+"» теперь видна игрокам."),50)}}
 function focusEd(){requestAnimationFrame(()=>{const el=$("#ed")||$("#ev-zf");if(el){el.focus();if(el.setSelectionRange&&el.tagName==="TEXTAREA") el.setSelectionRange(el.value.length,el.value.length)}})}
 function insertLink(id){
