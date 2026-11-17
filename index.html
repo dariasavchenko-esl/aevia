@@ -133,6 +133,15 @@ th{font:500 11px/1.3 var(--f-mono);letter-spacing:.08em;text-transform:uppercase
 tr:last-child td{border-bottom:0}
 td.grp{font:500 11px/1.3 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--brass);background:var(--paper)}
 .tfilter{margin:4px 0 8px;width:100%;max-width:320px}
+.tedit td,.tedit th{padding:2px 3px;vertical-align:top}
+.tedit textarea,.tedit input{width:100%;min-width:90px;min-height:0;font:inherit;font-size:14px;line-height:1.4;padding:4px 6px;border:1px solid transparent;border-radius:4px;background:transparent;resize:none;overflow:hidden}
+.tedit textarea:hover,.tedit input:hover{border-color:var(--line)}
+.tedit textarea:focus,.tedit input:focus{border-color:var(--verd);background:var(--sheet)}
+.tedit th input{font-weight:600}
+.tedit .tcell{display:flex;gap:2px;align-items:center}
+.tedit .tctl{width:56px;white-space:nowrap}
+.tedit .tctl .tool{display:inline-grid;width:22px;height:22px}
+.teditor .tbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;position:sticky;bottom:0;padding:10px 0;background:linear-gradient(transparent,var(--paper) 30%);z-index:2}
 
 /* gallery */
 .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:6px 0 10px}
@@ -954,10 +963,11 @@ function quantum(a,i,D,kind){
     return '<div class="q player'+(isNew(i)?" new":"")+'"><div class="qt">'+(i.table?tableHtml(i,a):"<p>"+fmt(i.t,D)+"</p>")+"</div></div>";
   }
   let body;
-  if(editing&&!i.table) body=editorHtml(i.t,kind==="lead"?"Короткое описание статьи":"");
+  if(editing&&i.table) body=tableEditorHtml(i);
+  else if(editing) body=editorHtml(i.t,kind==="lead"?"Короткое описание статьи":"");
   else body=i.table?tableHtml(i,a):"<p>"+fmt(i.t,D)+"</p>";
   return '<div class="q '+(i.o?"open":"closed")+'">'+eyeBtn(i.o,"tq",attrs)+'<div class="qt">'+body+'</div><div class="qtools">'+
-    (i.table||editing?"":'<button class="tool" data-act="eq" '+attrs+' aria-label="Изменить" title="Изменить">'+I.pen+"</button>")+
+    (editing?"":'<button class="tool" data-act="eq" '+attrs+' aria-label="Изменить" title="'+(i.table?"Изменить таблицу":"Изменить")+'">'+I.pen+"</button>")+
     (kind==="lead"||editing?"":'<button class="tool" data-act="uq" '+attrs+' aria-label="Выше" title="Поднять выше">'+I.up+'</button><button class="tool" data-act="dq" '+attrs+' aria-label="Удалить" title="Удалить">'+I.x+"</button>")+"</div></div>";
 }
 function editorHtml(t,hint){
@@ -982,6 +992,22 @@ function tableHtml(i,a){
   }
   if(!rows.length) h+='<tr><td colspan="'+tb.cols.length+'" class="hint">Ничего не найдено.</td></tr>';
   return h+"</tbody></table></div>";
+}
+function tAuto(){requestAnimationFrame(()=>document.querySelectorAll(".tedit textarea").forEach(t=>{t.style.height="auto";t.style.height=t.scrollHeight+"px"}))}
+function tableEditorHtml(i){
+  const tb=S.tdraft||clone(i.table);if(!S.tdraft) S.tdraft=tb;
+  const f=(S.tf[i.id]||"").toLowerCase();
+  let h='<div class="teditor"><div class="row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px">';
+  if(tb.rows.length>12) h+='<input class="tfilter" id="tf-'+i.id+'" data-tf="'+i.id+'" placeholder="Найти строку…" value="'+esc(S.tf[i.id]||"")+'" style="margin:0">';
+  h+='<span class="hint">'+tb.rows.length+" "+plural(tb.rows.length,"строка","строки","строк")+" · "+tb.cols.length+" "+plural(tb.cols.length,"столбец","столбца","столбцов")+'</span></div>';
+  h+='<div class="tw"><table class="tedit"><thead><tr><th class="tctl"></th>'+tb.cols.map((c,k)=>'<th><div class="tcell"><input data-tc="-1,'+k+'" value="'+esc(c)+'" aria-label="Заголовок столбца '+(k+1)+'"><button class="tool" data-act="tdelc" data-v="'+k+'" title="Удалить столбец" aria-label="Удалить столбец">'+I.x+"</button></div></th>").join("")+"</tr></thead><tbody>";
+  tb.rows.forEach((r,ri)=>{
+    if(f&&!r.join(" ").toLowerCase().includes(f)) return;
+    h+='<tr><td class="tctl"><button class="tool" data-act="tupr" data-v="'+ri+'" title="Строку выше" aria-label="Строку выше">↑</button><button class="tool" data-act="tdelr" data-v="'+ri+'" title="Удалить строку" aria-label="Удалить строку">'+I.x+"</button></td>"+
+      tb.cols.map((_,k)=>'<td><textarea rows="1" data-tc="'+ri+","+k+'" aria-label="Строка '+(ri+1)+", столбец "+(k+1)+'">'+esc(r[k]??"")+"</textarea></td>").join("")+"</tr>";
+  });
+  h+='</tbody></table></div><div class="row tbar"><button class="btn" data-act="taddr">+ строка</button><button class="btn" data-act="taddc">+ столбец</button><span style="flex:1"></span><button class="btn pri" data-act="save">Сохранить</button><button class="btn" data-act="cancel">Отмена</button></div></div>';
+  return h;
 }
 function imgSrc(asset){return window.__imgSrc?window.__imgSrc(asset):"/_blob/"+asset}
 
@@ -1042,7 +1068,7 @@ function articleView(D,id){
     }
     h+="</h2>";
     for(const i of s.items) h+=quantum(a,i,D);
-    if(gm) h+='<div class="addrow"><button data-act="aq" data-a="'+a.id+'" data-q="'+s.id+'">+ факт</button></div>';
+    if(gm) h+='<div class="addrow"><button data-act="aq" data-a="'+a.id+'" data-q="'+s.id+'">+ факт</button><button data-act="at" data-a="'+a.id+'" data-q="'+s.id+'">+ таблица</button></div>';
     h+="</section>";
   });
   if(gm) h+='<div class="addrow" style="margin-left:0;margin-top:22px"><button data-act="asec" data-a="'+a.id+'">+ раздел</button></div>';
@@ -1412,7 +1438,13 @@ document.addEventListener("click",e=>{
     case "tn": mut(a=>{const n=a.names.find(n=>n.id===qid);n.o=!n.o});break;
     case "ti": mut(a=>{const im=a.images.find(i=>i.id===qid);im.o=!im.o;if(im.o) autoName(a)});break;
     case "secall": mut(a=>{const s=a.sections.find(s=>s.id===qid);const v=b.dataset.v==="1";for(const i of s.items){if(v&&!i.o) i.ot=Date.now();i.o=v}if(v) autoName(a)});break;
-    case "eq": S.edit={kind:"q",a:aid,q:qid};S.pick=null;renderMain();focusEd();break;
+    case "eq": {S.edit={kind:"q",a:aid,q:qid};S.pick=null;const f0=findItem(S.arts.get(aid),qid);S.tdraft=f0&&f0.item.table?clone(f0.item.table):null;renderMain();if(!S.tdraft) focusEd();else tAuto();break}
+    case "taddr": if(S.tdraft){S.tdraft.rows.push(S.tdraft.cols.map(()=>""));S.tf[S.edit.q]="";renderMain();tAuto();const t=document.querySelectorAll(".tedit textarea");t[t.length-S.tdraft.cols.length]?.focus()}break;
+    case "taddc": if(S.tdraft){S.tdraft.cols.push("Новый столбец");S.tdraft.rows.forEach(r=>r.push(""));renderMain();tAuto()}break;
+    case "tdelr": if(S.tdraft){S.tdraft.rows.splice(Number(b.dataset.v),1);renderMain();tAuto()}break;
+    case "tupr": if(S.tdraft){const k=Number(b.dataset.v);if(k>0){const R=S.tdraft.rows;[R[k-1],R[k]]=[R[k],R[k-1]];renderMain();tAuto()}}break;
+    case "tdelc": if(S.tdraft&&S.tdraft.cols.length>1){const k=Number(b.dataset.v);S.tdraft.cols.splice(k,1);S.tdraft.rows.forEach(r=>r.splice(k,1));renderMain();tAuto()}break;
+    case "at": mut(a=>{const s=a.sections.find(s=>s.id===qid);const id=a.id+"-q"+uid();s.items.push({id,table:{cols:["Столбец 1","Столбец 2"],rows:[["",""]]},o:false});S.edit={kind:"q",a:a.id,q:id};S.tdraft={cols:["Столбец 1","Столбец 2"],rows:[["",""]]}});break;
     case "en": S.edit={kind:"name",a:aid,q:qid};renderMain();focusEd();break;
     case "es": S.edit={kind:"sec",a:aid,q:qid};renderMain();focusEd();break;
     case "ec": S.edit={kind:"cap",a:aid,q:qid};renderMain();focusEd();break;
@@ -1518,7 +1550,7 @@ function insertLink(id){
   S.edit.draft=v;S.pick=null;renderMain();const t2=$("#ed");t2.value=v;t2.focus();t2.setSelectionRange(s+ins.length,s+ins.length);
 }
 function cancelEdit(){
-  const E=S.edit;S.edit=null;S.pick=null;
+  const E=S.edit;S.edit=null;S.pick=null;S.tdraft=null;
   if(E&&E.kind==="q"){const a0=S.arts.get(E.a);const f=a0&&findItem(a0,E.q);if(f&&!f.item.table&&!String(f.item.t||"").trim()){const a=clone(a0);const g=findItem(a,E.q);if(g.kind==="lead") a.lead=null;else g.sec.items.splice(g.idx,1);saveArt(a,null,{noUndo:true});return}}
   if(E&&E.kind==="ev"){const ev=S.tl.events.find(x=>x.id===E.q);if(ev&&!String(ev.t||"").trim()){S.tl.events=S.tl.events.filter(x=>x!==ev);saveTl(null);return}}
   renderMain();applyPending();
@@ -1539,7 +1571,8 @@ function commitEdit(){
     S.edit=null;S.pick=null;saveTl(prev);return;
   }
   const a0=S.arts.get(E.a);const prev=clone(a0);const a=clone(a0);
-  if(E.kind==="q"){const f=findItem(a,E.q);if(!val){ if(f.kind==="lead") a.lead=null; else f.sec.items.splice(f.idx,1)} else f.item.t=val}
+  if(E.kind==="q"&&S.tdraft){const f=findItem(a,E.q);if(f&&f.item.table){f.item.table={cols:S.tdraft.cols.map(c=>String(c).trim()),rows:S.tdraft.rows.map(r=>r.map(c=>String(c??"").trim()))}}S.tdraft=null}
+  else if(E.kind==="q"){const f=findItem(a,E.q);if(!val){ if(f.kind==="lead") a.lead=null; else f.sec.items.splice(f.idx,1)} else f.item.t=val}
   else if(E.kind==="name"){if(!val){S.edit=null;renderMain();return}a.names.find(n=>n.id===E.q).t=val}
   else if(E.kind==="title"){a.names[0].t=val||a.names[0].t}
   else if(E.kind==="sec"){const sc=a.sections.find(s=>s.id===E.q);sc.h=val||"Без названия";const ph=($("#ed2")?.value||"").trim();if(ph) sc.ph=ph;else delete sc.ph}
@@ -1570,7 +1603,7 @@ document.addEventListener("keydown",e=>{
 });
 document.addEventListener("input",e=>{
   if(e.target.id==="pickq"){S.pick=e.target.value;const ed=$("#ed");const v=ed?.value;const pos=e.target.selectionStart;renderMain();if(v!=null) $("#ed").value=v;const p=$("#pickq");p.focus();p.setSelectionRange(pos,pos)}
-  if(e.target.dataset.tf){const k=e.target.dataset.tf;S.tf[k]=e.target.value;const pos=e.target.selectionStart;renderMain();const el=document.getElementById("tf-"+k);if(el){el.focus();el.setSelectionRange(pos,pos)}}
+  if(e.target.dataset.tf){const k=e.target.dataset.tf;S.tf[k]=e.target.value;const pos=e.target.selectionStart;renderMain();const el=document.getElementById("tf-"+k);if(el){el.focus();el.setSelectionRange(pos,pos)}if(S.tdraft) tAuto()}
 });
 let qT;
 $("#q").addEventListener("input",e=>{clearTimeout(qT);qT=setTimeout(()=>{S.q=e.target.value;S.newArt=false;renderMain()},120)});
@@ -2011,6 +2044,11 @@ function glSaveRow(tr){
 document.addEventListener("change",e=>{
   if(e.target.dataset&&e.target.dataset.gl){const tr=e.target.closest("tr");if(tr) glSaveRow(tr)}
   if(e.target.id==="glmiss"){S.glmiss=e.target.checked;glFilter()}
+});
+document.addEventListener("input",e=>{
+  const c=e.target.dataset&&e.target.dataset.tc;if(!c||!S.tdraft) return;
+  const [r,k]=c.split(",").map(Number);if(r<0) S.tdraft.cols[k]=e.target.value;else if(S.tdraft.rows[r]) S.tdraft.rows[r][k]=e.target.value;
+  if(e.target.tagName==="TEXTAREA"){e.target.style.height="auto";e.target.style.height=e.target.scrollHeight+"px"}
 });
 document.addEventListener("input",e=>{if(e.target.id==="glq"){S.glq=e.target.value;glFilter()}});
 document.addEventListener("focusout",e=>{if(e.target.dataset&&e.target.dataset.gl) setTimeout(()=>{if(!(document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.gl)) applyPending()},300)});
