@@ -219,6 +219,18 @@ figure.img figcaption span{flex:1;min-width:0}
 mark{background:var(--verd-soft);color:inherit;border-radius:2px;padding:0 1px}
 
 .qadd-btn{flex:none;border-radius:999px;font-size:13px;padding:6px 12px}
+.gallery{columns:260px auto;column-gap:18px;margin-top:18px}
+.gal{break-inside:avoid;margin:0 0 18px;background:var(--sheet);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:inline-block;width:100%}
+.gal .gph{position:relative;background:var(--paper)}
+.gal img{display:block;width:100%;height:auto}
+.gal .gzoom{position:absolute;top:8px;right:8px;background:var(--sheet);opacity:0;transition:opacity .15s}
+.gal:hover .gzoom,.gal .gzoom:focus{opacity:.95}
+@media (hover:none){.gal .gzoom{opacity:.9}}
+.gal .glock{position:absolute;top:8px;left:8px;background:var(--sheet);color:var(--secret);border-radius:999px;padding:4px;display:grid;place-items:center}
+.gal.closed{border-color:var(--secret-soft)}
+.gal figcaption{padding:10px 12px;font-size:14px;line-height:1.45;display:grid;gap:4px}
+.gal .gsrc{font:500 12px/1.3 var(--f-mono);color:var(--muted);text-decoration:none}
+.gal .gsrc:hover{color:var(--ink);text-decoration:underline}
 .suggest{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:28px;padding-top:14px;border-top:1px solid var(--line)}
 .inbox-card{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0;background:var(--sheet);display:grid;gap:8px}
 .inbox-card.done{opacity:.6}
@@ -706,6 +718,7 @@ function parseHash(){
   if(h==="map") return {v:"map"};
   if(h==="glossary") return {v:"gloss"};
   if(h==="leaks") return {v:"leaks"};
+  if(h==="gallery") return {v:"gallery"};
   if(h==="inbox") return {v:"inbox"};
   return {v:"home"};
 }
@@ -726,7 +739,7 @@ function sortArts(list){return list.sort((a,b)=>(a.order||0)-(b.order||0)||title
 function renderSide(){
   const D=view();const q=S.q.trim().toLowerCase();
   const cur=S.route.v==="art"?S.route.id:null;
-  let h='<ul class="navtop"><li><a href="#home"'+(S.route.v==="home"?' aria-current="page"':"")+'>Главная</a></li><li><a href="#timeline"'+(S.route.v==="tl"?' aria-current="page"':"")+'>Хронология</a></li><li><a href="#map"'+(S.route.v==="map"?' aria-current="page"':"")+'>Карта</a></li><li><a href="#glossary"'+(S.route.v==="gloss"?' aria-current="page"':"")+'>Глоссарий</a></li></ul>';
+  let h='<ul class="navtop"><li><a href="#home"'+(S.route.v==="home"?' aria-current="page"':"")+'>Главная</a></li><li><a href="#timeline"'+(S.route.v==="tl"?' aria-current="page"':"")+'>Хронология</a></li><li><a href="#map"'+(S.route.v==="map"?' aria-current="page"':"")+'>Карта</a></li><li><a href="#glossary"'+(S.route.v==="gloss"?' aria-current="page"':"")+'>Глоссарий</a></li><li><a href="#gallery"'+(S.route.v==="gallery"?' aria-current="page"':"")+'>Галерея</a></li></ul>';
   for(const [c,cn] of CATS){
     const list=sortArts([...D.arts.values()].filter(a=>a.cat===c));
     if(!list.length) continue;
@@ -767,6 +780,7 @@ function renderMain(){
   if(S.route.v==="map"){m.innerHTML='<div class="page"><div class="crumb">Эвия и Врата Балдура</div><h1 class="title">Карта</h1><div class="wip"><b>WIP</b><p>Карта в работе. Скоро здесь появится интерактивная карта с метками мест из вики.</p></div></div>';return}
   if(S.route.v==="art"){m.innerHTML=articleView(D,S.route.id);return}
   if(S.route.v==="leaks"&&D.gm){m.innerHTML=leaksView();return}
+  if(S.route.v==="gallery"){m.innerHTML=galleryView(D);return}
   if(S.route.v==="inbox"&&D.gm){m.innerHTML=inboxView();return}
   m.innerHTML=homeView(D);
 }
@@ -1169,6 +1183,21 @@ function inboxAdd(card,open){
   else{sec=a.sections[0];if(!sec){sec={id:a.id+"-s"+uid(),h:"Факты",items:[]};a.sections.push(sec)}sec.items.push(item)}
   saveArt(a,a0);inboxMark(id,"a");toast("Добавлено в «"+title(a,true)+"»"+(open?" и открыто игрокам.":" скрытым фактом."));
 }
+function galleryView(D){
+  const gm=D.gm;const list=[];
+  for(const a of sortArts([...D.arts.values()].filter(a=>a.cat!=="meta"))) for(const im of (a.images||[])) list.push({a,im});
+  const shown=gm&&S.galF?list.filter(x=>S.galF==="open"?x.im.o:!x.im.o):list;
+  let h='<div class="page"><div class="crumb">Все иллюстрации архива</div><h1 class="title">Галерея</h1>';
+  h+='<p class="hint">'+shown.length+" "+plural(shown.length,"изображение","изображения","изображений")+'. Нажмите на картинку, чтобы перейти к статье, или на ⤢, чтобы открыть её целиком.</p>';
+  if(gm) h+='<div class="tl-filters">'+[["","Все"],["open","Открытые"],["closed","Скрытые"]].map(([k,n])=>'<button class="fchip" data-act="galf" data-v="'+k+'" aria-pressed="'+((S.galF||"")===k)+'">'+n+"</button>").join("")+"</div>";
+  if(!shown.length) return h+'<p class="hint">Пока здесь пусто.</p></div>';
+  h+='<div class="gallery">';
+  for(const {a,im} of shown){
+    const src=esc(imgSrc(im.asset));const href="#a-"+a.id.replace(/_/g,"-");
+    h+='<figure class="gal'+(gm&&!im.o?" closed":"")+'"><div class="gph"><a href="'+href+'"><img loading="lazy" src="'+src+'" alt="'+esc(plain(im.cap)||title(a,gm))+'"></a><button class="tool gzoom" data-act="zoom" data-src="'+src+'" aria-label="Открыть целиком" title="Открыть целиком">⤢</button>'+(gm&&!im.o?'<span class="glock" title="Скрыто от игроков">'+I.lock+"</span>":"")+'</div><figcaption>'+(im.cap?"<span>"+fmt(im.cap,D)+"</span>":"")+'<a class="gsrc" href="'+href+'">'+esc(title(a,gm))+"</a></figcaption></figure>";
+  }
+  return h+"</div></div>";
+}
 function moveArt(aid,dir){
   const a=S.arts.get(aid);if(!a) return;
   const sib=sortArts([...S.arts.values()].filter(x=>x.cat===a.cat&&(x.group||"")===(a.group||"")));
@@ -1258,6 +1287,7 @@ document.addEventListener("click",e=>{
     case "leakign": {const prev=clone(S.tl);S.tl.leakIgnore=[...new Set([...(S.tl.leakIgnore||[]),b.dataset.v])];saveTl(prev);toast("Больше не отмечаю «"+b.dataset.v+"…». Отменить — «Вернуть».");break}
     case "egrp": openGroup(b.dataset.c,b.dataset.g);break;
     case "leaks": $("#menu").hidden=true;location.hash="#leaks";break;
+    case "galf": S.galF=b.dataset.v;renderMain();break;
     case "inbox": $("#menu").hidden=true;location.hash="#inbox";break;
     case "sugg": openSuggest(aid);break;
     case "sgsend": sendSuggest(aid);break;
